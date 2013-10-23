@@ -1,0 +1,17 @@
+#!/bin/sh
+
+cd /bin
+for i in $(busybox --list)
+do
+  ln -f -s busybox $i
+done
+
+mount -t proc none /proc
+mount -t sysfs none /sys
+mount -t tmpfs -o size=10 tmpfs /tmp
+mdev -s
+
+/usr/bin/sysinfo
+exec /bin/sh
+
+exit 0
