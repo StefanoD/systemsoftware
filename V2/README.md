@@ -2,41 +2,44 @@
 
 linux 3.4.66
 
-nützliche links:[HowToQemu](http://fedoraproject.org/wiki/Architectures/ARM/HowToQemu)
+nützliche links:
 
+  [HowToQemu](http://fedoraproject.org/wiki/Architectures/ARM/HowToQemu)
+  
+  [Qemu Netzwerk](http://qemu-buch.de/de/index.php/QEMU-KVM-Buch/_Netzwerkoptionen)
 
-#####Wie müssen nun die ARCH und CROSS_COMPILE Variablen gesetzt werden? 
+##### Wie müssen nun die ARCH und CROSS_COMPILE Variablen gesetzt werden? 
 * CROSS_COMPILE=arm-linux-gnueabi ARCH=arm
 
-#####Wie können Sie diese Variablen in Ihrer Shell automatisch setzen, sodass Sie die Variablen nicht ständig angeben müssen? 
+##### Wie können Sie diese Variablen in Ihrer Shell automatisch setzen, sodass Sie die Variablen nicht ständig angeben müssen? 
 * export VAR=Wert
 
-#####WConfig erstellen
+##### Config erstellen
 * make versatile_defconfig
 * im menuconfig unter systemtype versatile express family auswählen
-.* Versatile Express Cortex-A9x4 tile 
-.* Device Tree support for Versatile Express platforms
+ * Versatile Express Cortex-A9x4 tile 
+ * Device Tree support for Versatile Express platforms
 
-#####Welche Gerätetreiber sind aktiviert? 
+##### Welche Gerätetreiber sind aktiviert? 
 * MTD, RAMDisk Support, NetworkDevice Support, I2C Bus, SoundKarte Advanced, HID Devices (z.B. für USB Maus), USB, SDKartenSupport, IO MemmoryManagement Support,
 
-#####WWelche Konsolen sind konfiguriert? 
+##### Welche Konsolen sind konfiguriert? 
 * FrameBuffer Console, Console Translations, Dummy Console, Serial_Amba_PL011_Console,
 
-#####Deaktivieren Sie den 'Loadable Module Support' im Kernel und achten Sie auf die feste Einbindung der Treiber in den Kernel. 
+##### Deaktivieren Sie den 'Loadable Module Support' im Kernel und achten Sie auf die feste Einbindung der Treiber in den Kernel. 
 * Ändert automatisch die einbindung von "Modul" zu "integriert"
 
-#####Welche ARM Architekturen unterstützt QEMU? 
+##### Welche ARM Architekturen unterstützt QEMU? 
 * qemu-system-arm -machine arm
-* vexpress-a9          ARM Versatile Express for Cortex-A9
-* vexpress-a15         ARM Versatile Express for Cortex-A15
+ * vexpress-a9          ARM Versatile Express for Cortex-A9
+ * vexpress-a15         ARM Versatile Express for Cortex-A15
 
 (Cortex-A)
 
 ##### Starten Sie den Kernel mit initramfs im QEMU Emulator. Was sehen Sie?
 * qemu-system-arm -M vexpress-a9 -kernel arch/arm/boot/zImage 
 
-#####Damit Sie die Bootmeldungen des Kernels sehen können, muss der Kernel mit einem geeigneten console= Parameter gestartet werden. Warum benötigt der Kernel diesen Parameter, wie lautet dieser Parameter? 
+##### Damit Sie die Bootmeldungen des Kernels sehen können, muss der Kernel mit einem geeigneten console= Parameter gestartet werden. Warum benötigt der Kernel diesen Parameter, wie lautet dieser Parameter? 
 * -serial stdio -append "console=ttyAMA0"
 
 #####Benutzen Sie nun eine serielle Schnittstelle für die Konsole. Welche Konsole ist im Linux Kernel konfiguriert?
@@ -55,6 +58,26 @@ nützliche links:[HowToQemu](http://fedoraproject.org/wiki/Architectures/ARM/How
 * qemu system_reset
 
 
+##### Keymap:
+* Busybox hat eine spezielle binary  loadkeys ist hier nutzlos!
+* Host: sudo dumpkmap > keymap
+* Target: loadkmap < keymap
+* 
+
+Ram Total 123Mb
+frei 117Bb
+= ~6mb
+
+### Netzwerkkonfiguration:
+##### Welche Netzwerkkarten sind in der Linux Kernel Konfiguration aktiviert?
+* 
+
+##### Welche Netzwerkkarten unterstützt QEMU? Welche brauchen Sie?
+* qemu-system-arm -net nic,model=? -> smc91c111
+
+##### Der Socket auf den ihr QEMU-Netzwerkinterface zugreifen muss lautet /tmp/vde2-tap0.ctl. 
+Achten Sie auch darauf, beim Aufruf in QEMU eine 'eigene' Mac Adresse für Ihre Netzwerkkarte zu verwenden, sonst bekommen Sie keine eigene IP Adresse vom DHCP Server zugewiesen.
+-net nic,macaddr=00:80:AD:3B:3E:4F
 
 erst im initfile init (initramfs) mit busybox verlinken
 --install installiert busybox selbständig (in config einstellen)
