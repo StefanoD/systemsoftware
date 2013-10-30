@@ -2,8 +2,9 @@
 
 linux 3.4.66
 
-nützliche links:[HowToQemu](http://fedoraproject.org/wiki/Architectures/ARM/HowToQemu)
-
+nützliche links:
+[HowToQemu](http://fedoraproject.org/wiki/Architectures/ARM/HowToQemu)
+[Qemu Netzwerk](http://qemu-buch.de/de/index.php/QEMU-KVM-Buch/_Netzwerkoptionen)
 
 #####Wie müssen nun die ARCH und CROSS_COMPILE Variablen gesetzt werden? 
 * CROSS_COMPILE=arm-linux-gnueabi ARCH=arm
@@ -55,6 +56,26 @@ nützliche links:[HowToQemu](http://fedoraproject.org/wiki/Architectures/ARM/How
 * qemu system_reset
 
 
+##### Keymap:
+* Busybox hat eine spezielle binary  loadkeys ist hier nutzlos!
+* Host: sudo dumpkmap > keymap
+* Target: loadkmap < keymap
+* 
+
+Ram Total 123Mb
+frei 117Bb
+= ~6mb
+
+### Netzwerkkonfiguration:
+##### Welche Netzwerkkarten sind in der Linux Kernel Konfiguration aktiviert?
+* 
+
+##### Welche Netzwerkkarten unterstützt QEMU? Welche brauchen Sie?
+* qemu-system-arm -net nic,model=? -> smc91c111
+
+##### Der Socket auf den ihr QEMU-Netzwerkinterface zugreifen muss lautet /tmp/vde2-tap0.ctl. 
+Achten Sie auch darauf, beim Aufruf in QEMU eine 'eigene' Mac Adresse für Ihre Netzwerkkarte zu verwenden, sonst bekommen Sie keine eigene IP Adresse vom DHCP Server zugewiesen.
+-net nic,macaddr=00:80:AD:3B:3E:4F
 
 erst im initfile init (initramfs) mit busybox verlinken
 --install installiert busybox selbständig (in config einstellen)
