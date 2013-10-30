@@ -6,6 +6,10 @@ echo "Creating sysinfo for arm"
 
 arm-linux-gnueabi-gcc -static sysinfo.c -o systemarm/bin/sysinfo
 
+echo "Creating keymap for arm"
+
+#arm-linux-gnueabi-gcc -static keymap.c -o systemarm/bin/keymap
+
 echo "Creating initramfs_list"
 
 echo "# directory structure
@@ -36,7 +40,7 @@ if [ -z "$busybox" ]; then
 fi
 
 echo "\n#busybox\n" >> initramfs_list
-echo "file /bin/busybox ../syso$busybox 755 0 0" >> initramfs_list
+echo "file /bin/busybox ../systemsoftware/V2$busybox 755 0 0" >> initramfs_list
 
 
 #sysinfo
@@ -48,7 +52,19 @@ if [ -z "$sysinfo" ]; then
 fi
 
 echo "\n#sysinfo\n" >> initramfs_list
-echo "file /usr/bin/sysinfo ../syso$sysinfo 755 0 0" >> initramfs_list
+echo "file /usr/bin/sysinfo ../systemsoftware/V2$sysinfo 755 0 0" >> initramfs_list
+
+
+#keymap
+keymap=$(find . | grep keymap$ | tr -d .)
+
+if [ -z "$keymap" ]; then
+        echo "ERROR: keymap not found"
+        exit 1
+fi
+
+echo "\n#keymap\n" >> initramfs_list
+echo "file /usr/bin/keymap ../systemsoftware/V2$keymap 755 0 0" >> initramfs_list
 
 #initscript
 init=$(find . | grep init$ | tr -d .)
@@ -59,5 +75,5 @@ if [ -z "$init" ]; then
 fi
 
 echo "\n#initscript\n" >> initramfs_list
-echo "file /init ../syso$init 755 0 0" >> initramfs_list
+echo "file /init ../systemsoftware/V2/$init 755 0 0" >> initramfs_list
 
