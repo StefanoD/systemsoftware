@@ -48,7 +48,7 @@ nützliche links:
 #####Wie aktivieren Sie die Konsole unter Linux beim Booten?
 * -append "console=tty1"
 
-#####Wie können Sie sich die Konsole unter QEMU ausgeben lassen?
+#####Wie können Sie sich die Konsole unter QEMU ausgeben lassen?net 
 
 #####Experimentieren Sie auch mit der Konsolenausgabe von QEMU auf eine pty Schnittstelle von homer. Mittels minicom oder screen können Sie auf pty Schnittstellen zugreifen. 
 * minicom
@@ -70,14 +70,20 @@ frei 117Bb
 
 ### Netzwerkkonfiguration:
 ##### Welche Netzwerkkarten sind in der Linux Kernel Konfiguration aktiviert?
-* 
+* alle Möglichen (jetzt nichtmehr)
 
 ##### Welche Netzwerkkarten unterstützt QEMU? Welche brauchen Sie?
 * qemu-system-arm -net nic,model=? -> smc91c111
+* qemu-system-arm -M vexpress-a9 -net nic,model=? -> lan9118
 
 ##### Der Socket auf den ihr QEMU-Netzwerkinterface zugreifen muss lautet /tmp/vde2-tap0.ctl. 
 Achten Sie auch darauf, beim Aufruf in QEMU eine 'eigene' Mac Adresse für Ihre Netzwerkkarte zu verwenden, sonst bekommen Sie keine eigene IP Adresse vom DHCP Server zugewiesen.
--net nic,macaddr=00:80:AD:3B:3E:4F
+* qemu-system-arm -M vexpress-a9 -kernel zImage -net nic,model=lan9118,macaddr=00:80:AD:3B:3E:4F -net vde,sock=/tmp/vde2-tap0.ctl
+
+
+
+
+------------------------------------------------------------------
 
 erst im initfile init (initramfs) mit busybox verlinken
 --install installiert busybox selbständig (in config einstellen)
