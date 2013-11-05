@@ -75,5 +75,5 @@ if [ -z "$init" ]; then
 fi
 
 echo "\n#initscript\n" >> initramfs_list
-echo "file /init ../systemsoftware/V2/$init 755 0 0" >> initramfs_list
+echo "file /init ../systemsoftware/V2$init 755 0 0" >> initramfs_list
 
