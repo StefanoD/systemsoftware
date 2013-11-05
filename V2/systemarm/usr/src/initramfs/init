@@ -13,6 +13,7 @@ mdev -s
 
 /usr/bin/sysinfo
 loadkmap < /usr/bin/keymap
+udhcpc -i eth0 -s /etc/udhcpc/sample.script
 exec /bin/sh
 
 exit 0

@@ -9,6 +9,7 @@ dir /bin 755 0 0
 dir /usr 755 0 0
 dir /usr/bin 755 0 0
 dir /etc 755 0 0
+dir /etc/udhcpc 755 0 0
 dir /var 755 0 0
 dir /tmp 755 0 0 
 
@@ -28,6 +29,15 @@ file /usr/bin/sysinfo ../systemsoftware/V2/systemarm/bin/sysinfo 755 0 0
 #keymap
 
 file /usr/bin/keymap ../systemsoftware/V2/systemarm/bin/keymap 755 0 0
+
+#udhcp
+
+file /etc/udhcpc/sample.bound ../systemsoftware/V2/systemarm/etc/udhcpc/sample.bound 755 0 0
+file /etc/udhcpc/sample.deconfig ../systemsoftware/V2/systemarm/etc/udhcpc/sample.deconfig 755 0 0
+file /etc/udhcpc/sample.nak ../systemsoftware/V2/systemarm/etc/udhcpc/sample.nak 755 0 0
+file /etc/udhcpc/sample.renew ../systemsoftware/V2/systemarm/etc/udhcpc/sample.renew 755 0 0
+file /etc/udhcpc/sample.script ../systemsoftware/V2/systemarm/etc/udhcpc/sample.script 755 0 0
+file /etc/udhcpc/simple.script ../systemsoftware/V2/systemarm/etc/udhcpc/simple.script 755 0 0
 
 #initscript
 
