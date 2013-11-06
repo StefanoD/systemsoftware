@@ -1,12 +1,10 @@
-#V2
+#V2 (linux 3.4.66)
 
-linux 3.4.66
+Nützliche links:
 
-nützliche links:
-
-  [HowToQemu](http://fedoraproject.org/wiki/Architectures/ARM/HowToQemu)
-  
-  [Qemu Netzwerk](http://qemu-buch.de/de/index.php/QEMU-KVM-Buch/_Netzwerkoptionen)
+ * [HowToQemu](http://fedoraproject.org/wiki/Architectures/ARM/HowToQemu)
+ * [Qemu Netzwerk](http://qemu-buch.de/de/index.php/QEMU-KVM-Buch/_Netzwerkoptionen)
+ * [Qemu httpd](http://wiki.openwrt.org/doc/howto/http.httpd)
 
 ### Vorbereitung
 
