@@ -11,9 +11,10 @@ dir /usr/bin 755 0 0
 dir /etc 755 0 0
 dir /etc/udhcpc 755 0 0
 dir /var 755 0 0
-dir /tmp 755 0 0 
+dir /tmp 755 0 0
 dir /lib 755 0 0
 dir /www 755 0 0
+dir /www/cgi-bin 755 0 0
 
 #links
 slink /bin/sh /bin/busybox 777 0 0
@@ -30,9 +31,13 @@ file /usr/bin/sysinfo ../systemsoftware/V2/systemarm/bin/sysinfo 755 0 0
 
 #keymap
 
-file /usr/bin/keymap ../systemsoftware/V2/systemarm/bin/keymap 755 0 0
+file /etc/keymap ../systemsoftware/V2/systemarm/etc/keymap 755 0 0
 
-#udhcp
+#initscript
+
+file /init ../systemsoftware/V2/systemarm/boot/init 755 0 0
+
+#udhcpc
 
 file /etc/udhcpc/sample.bound ../systemsoftware/V2/systemarm/etc/udhcpc/sample.bound 755 0 0
 file /etc/udhcpc/sample.deconfig ../systemsoftware/V2/systemarm/etc/udhcpc/sample.deconfig 755 0 0
@@ -40,10 +45,9 @@ file /etc/udhcpc/sample.nak ../systemsoftware/V2/systemarm/etc/udhcpc/sample.nak
 file /etc/udhcpc/sample.renew ../systemsoftware/V2/systemarm/etc/udhcpc/sample.renew 755 0 0
 file /etc/udhcpc/sample.script ../systemsoftware/V2/systemarm/etc/udhcpc/sample.script 755 0 0
 file /etc/udhcpc/simple.script ../systemsoftware/V2/systemarm/etc/udhcpc/simple.script 755 0 0
+file /etc/udhcpc/udhcpd.conf ../systemsoftware/V2/systemarm/etc/udhcpc/udhcpd.conf 755 0 0
 
-#index.html
-file /www/index.html ../systemsoftware/V2/systemarm/www/index.html 755 0 0
-#libraries for dns
+#libraries
 
 file /lib/ld-linux.so.3 ../systemsoftware/V2/systemarm/lib/ld-linux.so.3 755 0 0
 file /lib/libc.so.6 ../systemsoftware/V2/systemarm/lib/libc.so.6 755 0 0
@@ -58,6 +62,6 @@ file /lib/libresolv.a ../systemsoftware/V2/systemarm/lib/libresolv.a 755 0 0
 file /lib/libresolv.so ../systemsoftware/V2/systemarm/lib/libresolv.so 755 0 0
 file /lib/libresolv.so.2 ../systemsoftware/V2/systemarm/lib/libresolv.so.2 755 0 0
 
-#initscript
+#Index Html
 
-file /init ../systemsoftware/V2//systemarm/usr/src/initramfs/init 755 0 0
+file /www/index.html ../systemsoftware/V2/systemarm/www/index.html 755 0 0

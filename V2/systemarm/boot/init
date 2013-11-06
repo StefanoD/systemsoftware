@@ -12,8 +12,9 @@ mount -t tmpfs -o size=10 tmpfs /tmp
 mdev -s
 
 /usr/bin/sysinfo
-loadkmap < /usr/bin/keymap
+loadkmap < /etc/keymap
 udhcpc -i eth0 -s /etc/udhcpc/sample.script
+
 exec /bin/sh
 
 exit 0
