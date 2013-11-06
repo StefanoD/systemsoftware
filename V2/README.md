@@ -95,17 +95,26 @@ Achten Sie auch darauf, beim Aufruf in QEMU eine 'eigene' Mac Adresse für Ihre 
 * loopback
 
 
+
 ##### DNS Auflösung aktivieren
 
 Die mitgelieferte statische Busybox-Binärdatei enthält nicht alle nötigen Bibliotheken zum Auflösen von DNS Namen. 
 Dazu muss ein Teil der Toolchain-Libs in das initramfs kopiert werden: 
 
-    Aktivieren Sie den telnetd auf dem Target und loggen Sie sich vom Host ein.
-    Automatisieren Sie alle Konfigurationsschritte geeignet in einem Skript.
-    Mit dem nun funktionierenden Netzwerk auf unserem Target können wir den Web Server aktivieren, um Informationen über das eingebettete System vom Host aus abzufragen. 
-    Dazu legen Sie das Verzeichnis /www an, in welchem Sie eine Start-Datei index.html anlegen. 
-    Starten Sie auf dem Target den busybox httpd über den Befehl: usr/sbin/httpd -h /www/ &
-    Greifen Sie nun auf dem Host über einen Web-Browser auf das Target zu. 
+    mkdir lib/ 
+    cp /usr/arm-linux-gnueabi/lib/libnss_{dns,files}* /usr/arm-linux-gnueabi/lib/{libresolv,ld-linux}* /usr/arm-linux-gnueabi/lib/libc.so.6 lib/ 
+
+Aktivieren Sie den telnetd auf dem Target und loggen Sie sich vom Host ein.
+* auf target: telnetd -l/bin/sh
+* auf host: telnet 192.168.29.X
+
+Automatisieren Sie alle Konfigurationsschritte geeignet in einem Skript. 
+* ->
+
+Mit dem nun funktionierenden Netzwerk auf unserem Target können wir den Web Server aktivieren, um Informationen über das eingebettete System vom Host aus abzufragen. 
+Dazu legen Sie das Verzeichnis /www an, in welchem Sie eine Start-Datei index.html anlegen. 
+Starten Sie auf dem Target den busybox httpd über den Befehl: usr/sbin/httpd -h /www/ &
+Greifen Sie nun auf dem Host über einen Web-Browser auf das Target zu. 
 
 ##### Legen Sie das Verzeichnis /www/cgi-bin an und lassen Sie über zusätzliche Links auf Ihrer Startseite die folgenden dort von Ihnen gespeicherten cgi-scripts ablaufen:
 Ausgabe Name und Version des Betriebssystems auf dem Target
