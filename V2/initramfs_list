@@ -45,7 +45,6 @@ file /etc/udhcpc/sample.nak ../systemsoftware/V2/systemarm/etc/udhcpc/sample.nak
 file /etc/udhcpc/sample.renew ../systemsoftware/V2/systemarm/etc/udhcpc/sample.renew 755 0 0
 file /etc/udhcpc/sample.script ../systemsoftware/V2/systemarm/etc/udhcpc/sample.script 755 0 0
 file /etc/udhcpc/simple.script ../systemsoftware/V2/systemarm/etc/udhcpc/simple.script 755 0 0
-file /etc/udhcpc/udhcpd.conf ../systemsoftware/V2/systemarm/etc/udhcpc/udhcpd.conf 755 0 0
 
 #libraries
 
