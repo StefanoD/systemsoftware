@@ -61,6 +61,15 @@ file /lib/libresolv.a ../systemsoftware/V2/systemarm/lib/libresolv.a 755 0 0
 file /lib/libresolv.so ../systemsoftware/V2/systemarm/lib/libresolv.so 755 0 0
 file /lib/libresolv.so.2 ../systemsoftware/V2/systemarm/lib/libresolv.so.2 755 0 0
 
-#Index Html
+#WWW
 
+file /www/docu.html ../systemsoftware/V2/systemarm/www/docu.html 755 0 0
+file /www/bla.html ../systemsoftware/V2/systemarm/www/bla.html 755 0 0
 file /www/index.html ../systemsoftware/V2/systemarm/www/index.html 755 0 0
+file /www/home.html ../systemsoftware/V2/systemarm/www/home.html 755 0 0
+file /www/style.css ../systemsoftware/V2/systemarm/www/style.css 755 0 0
+
+#CGI
+
+file /www/cgi-bin/sysinfo_html ../systemsoftware/V2/systemarm/www/cgi-bin/sysinfo_html 755 0 0
+file /www/cgi-bin/script.sh ../systemsoftware/V2/systemarm/www/cgi-bin/script.sh 755 0 0

@@ -87,13 +87,13 @@ echo "file /init ../systemsoftware/V2$init 755 0 0" >> initramfs_list
 i=0
 while read line
 do
-    array[ $i ]="$line"
+    arrayUDHCPC[ $i ]="$line"
     (( i++ ))
 done < <(ls systemarm/etc/udhcpc/)
 
 echo -e "\n#udhcpc\n" >> initramfs_list
 
-for i in "${array[@]}"
+for i in "${arrayUDHCPC[@]}"
 do
     echo "file /etc/udhcpc/$i ../systemsoftware/V2/systemarm/etc/udhcpc/$i 755 0 0" >> initramfs_list
 done
@@ -103,21 +103,45 @@ done
 i=0
 while read line
 do
-    array[ $i ]="$line"
+    arrayLIB[ $i ]="$line"
     (( i++ ))
 done < <(ls systemarm/lib/)
 
 echo -e "\n#libraries\n" >> initramfs_list
 
-for i in "${array[@]}"
+for i in "${arrayLIB[@]}"
 do
     echo "file /lib/$i ../systemsoftware/V2/systemarm/lib/$i 755 0 0" >> initramfs_list
 done
 
-#index.html
-echo -e "\n#Index Html\n" >> initramfs_list
-echo "file /www/index.html ../systemsoftware/V2/systemarm/www/index.html 755 0 0" >> initramfs_list
+#WWW
+echo -e "\n#WWW\n" >> initramfs_list
+i=0
+while read line
+do
+    arrayWWW[ $i ]="$line"
+    (( i++ ))
+done < <(find systemarm/www/ -maxdepth 1 -type f -printf '%f\n')
 
+for i in "${arrayWWW[@]}"
+do
+    echo "file /www/$i ../systemsoftware/V2/systemarm/www/$i 755 0 0" >> initramfs_list
+done
+
+#cgi
+
+echo -e "\n#CGI\n" >> initramfs_list
+i=0
+while read line
+do
+    arrayCGI[ $i ]="$line"
+    (( i++ ))
+done < <(find systemarm/www/cgi-bin/ -type f -printf '%f\n') 
+
+for i in "${arrayCGI[@]}"
+do
+    echo "file /www/cgi-bin/$i ../systemsoftware/V2/systemarm/www/cgi-bin/$i 755 0 0" >> initramfs_list
+done
 
 echo -e "INITRAMFS_LIST CREATED"
 
