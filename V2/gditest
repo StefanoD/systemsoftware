@@ -1,0 +1,53 @@
+
+#include "fcgi_stdio.h" /* fcgi library; put it first*/
+#include <stdlib.h>
+
+int count;
+
+void initialize(void)
+{
+  count=0;
+}
+
+void main(void)
+{
+/* Initialization. */  
+  initialize();
+
+/* Response loop. */
+  while (FCGI_Accept() >= 0)   {
+    printHeader();
+    printInfoHtml();
+
+  }
+}
+
+void printHeader(void)
+{
+	printf("Content-type: text/html\r\n"
+        "\r\n"
+        "<title>Server Information</title>"
+        "<h1>this Kernel is written by Robin Roettger and Florian Froehlich</h1>");
+}
+void printInfoHtml(void)
+{
+  printf("<div>");
+  int days, hours, mins;
+  struct sysinfo sys_info;
+
+  if(sysinfo(&sys_info) != 0)
+    perror("Can't get sysinfo!");
+
+  days = sys_info.uptime / 86400;
+  hours = (sys_info.uptime / 3600) - (days * 24);
+  mins = (sys_info.uptime / 60) - (days * 1440) - (hours * 60);
+
+  printf("Uptime: %ddays, %dhours, %dminutes, %ldseconds\n",
+         days, hours, mins, sys_info.uptime % 60);
+  
+  printf("Total RAM: %s\n", getRam(sys_info.totalram));
+  printf("Free  RAM: %s\n", getRam(sys_info.freeram));
+  printf("Process count: %d\n", sys_info.procs);
+  printf("Page size: %ldByte\n", sysconf(_SC_PAGESIZE));
+  return 0;
+

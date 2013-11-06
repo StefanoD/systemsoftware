@@ -1,0 +1,14 @@
+body {	background:grey; font-family:"Arial";}
+a:link, a:visited {color:white; text-decoration:none;}
+a:hover, a:active {color:blue; text-decoration:none; font-size:1.1em;}
+#navigation, #footer { position: absolute; height:70px;  font-size: 1.4em; background:black;}
+#navigation { top:0;}
+#navigation ul li {margin-left:30px; float:left;}
+#footer { bottom: 0;}
+#main {position:absolute; top:80px; bottom:90px;}
+
+div {right:2%; left:2%; clear:left;}
+.container {color: white; }
+iframe {height:99%; width:100%; background:white; border: 2px solid black;}
+
+

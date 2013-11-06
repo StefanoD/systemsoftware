@@ -1,0 +1,6 @@
+
+use FCGI;
+ $var = 'foo';
+ while (FCGI::accept () >= 0) {
+   ... http-Request bearbeiten ...
+ }
