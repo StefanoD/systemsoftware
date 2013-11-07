@@ -3,6 +3,7 @@
 #cd ../syso
 
 echo "Creating sysinfo for arm..."
+
 arm-linux-gnueabi-gcc -static sysinfo.c -o systemarm/bin/sysinfo
 
 if [ -z "systemarm/bin/sysinfo" ]; then

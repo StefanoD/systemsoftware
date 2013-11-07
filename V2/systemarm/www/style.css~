@@ -1,6 +1,6 @@
 body {	background:#090909; font-family:"Arial";}
 div {left:5%; right:5%;}
-#navigation { left:3%; position: absolute; top:0;font-size:1.55em; padding: 10px 0;}
+#navigation { left:0; position: absolute; top:0;font-size:1.55em; padding: 10px 0;}
 #footer {position: absolute; bottom:0; padding: 5px 0;}
 #main {position: absolute; top:6%; bottom:4%; }
 iframe {height:100%; width:100%; border: 2px solid black; border-radius:10px 75px 10px 50px;}
