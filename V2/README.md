@@ -116,45 +116,38 @@ Greifen Sie nun auf dem Host über einen Web-Browser auf das Target zu.
 
 ##### Legen Sie das Verzeichnis /www/cgi-bin an und lassen Sie über zusätzliche Links auf Ihrer Startseite die folgenden dort von Ihnen gespeicherten cgi-scripts ablaufen:
 Ausgabe Name und Version des Betriebssystems auf dem Target
-* ->
+* -> done  cpu_info.sh (/proc/cpuinfo | sed ':a;N;$;s/\n\<br\>/g')
 
 Auslesen der CPU Info auf dem Target
-* ->
+* -> done cpu_info.sh
 
 Ausgabe der "uptime" des Target-Systems
-* ->
+* -> sysinfo_html.sh
 
 Ausgabe der Netzwerk Konfiguration
-* ->
+* -> network_config.sh (ifconfig -a | sed ':a;N;$!ba;s/\n/\<br\>/g')
 
 Löschen der temporären Dateien unter /tmp auf dem Target.
-* ->
+* -> clear_tmp.sh ( rm -rf /tmp/* )
 
 ... (Weitere Informationen, die Sie über das /proc und /sys Filesystem abfragen können) 
-* ->
-
+* -> show_tmp.sh (ls -ag $tmp_path | sed ':a;N;$!ba;s/\n/\<br\>/g') 
+* -> weitere infos noch in anderen Skripten
+* 
 ##### Was unterstützt der HTTP Server von busybox?
-
-      ->
+      -> cgi & standard aktionen
 
 ##### Welche grafischen Features lassen sich dazu im Browser darstellen (Javascript, Stylesheets usw.)
-###### Bauen Sie grafisch ansprechende Ausgaben, wenn der Browser auf Ihr 'Device' zugreift. Die beiden Grafiken sollen Ihnen für eigene Ideen als Input dienen. 
+* -> css, js, html , ... alles was keine extradienste benötigt
 
+###### Bauen Sie grafisch ansprechende Ausgaben, wenn der Browser auf Ihr 'Device' zugreift. Die beiden Grafiken sollen Ihnen für eigene Ideen als Input dienen. 
+* -> done
 ------------------------------------------------------------------
 ### Shrinking Kernel and RootFS
 Deaktivieren Sie nun im Kernel und RootFS (busybox) Treiber und Funktionen, die Sie nicht benötigen. Wenn Sie beim Aufbau des RootFS von einer minimalen busybox Konfiguration ausgegangen sind, müssen Sie am RootFS nicht viel ändern. Je nach ausgewählte Linux Kernel Konfiguration kann dieser durch schrittweise Deaktivierung der unnötigen Treiber klein geschrumpft werden, was sich - vor allem auf einem realen Device - auch in einer schnelleren Bootzeit bemerkbar macht. 
 
 * Deaktivierte Treiber:
- * ->
+ * -> keine
 
 * Größe davor/danach:
-
------------------------------------------------------------------
-
-erst im initfile init (initramfs) mit busybox verlinken
---install installiert busybox selbständig (in config einstellen)
-
-
-
-
-
+ * -> gleich
