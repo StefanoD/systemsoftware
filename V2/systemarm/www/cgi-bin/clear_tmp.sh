@@ -1,6 +1,6 @@
 #!/bin/sh
 
-tmp_path="/home/flfroehl/temp"
+tmp_path="/tmp"
 
 echo "Content-type: text/html"
 echo ""

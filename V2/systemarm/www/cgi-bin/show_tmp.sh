@@ -1,7 +1,7 @@
 #!/bin/sh
 
 
-tmp_path="/home/flfroehl/tmp"
+tmp_path="/tmp"
 
 
 echo "Content-type: text/html"

@@ -5,6 +5,9 @@
 echo "Creating sysinfo for arm..."
 arm-linux-gnueabi-gcc -static sysinfo.c -o systemarm/bin/sysinfo
 
+echo "Creating sysinfo html"
+
+arm-linux-gnueabi-gcc -static sysinfo_html.c -o systemarm/www/cgi-bin/sysinfo_html
 if [ -z "systemarm/bin/sysinfo" ]; then
 	echo "ERROR: sysinfo not created"
 	exit 1
