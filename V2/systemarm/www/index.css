@@ -1,0 +1,9 @@
+body { background: black; font-family:"Arial";}
+#navigation { left:3%; position: absolute; top:0;font-size:1.55em; padding: 10px 0;}
+#main {position: absolute; top:6%; bottom:4%; }
+iframe { height:100%; width:100%; border: 2px solid black; border-radius:10px 75px 10px 50px;}
+
+a:link, a:visited {color:#F0FFFF; text-decoration:none;}
+a:hover, a:active {color:#00BFFF	; text-decoration:none;}
+ul li {margin: 0 25px 0 0; float:left;}
+ul {list-style-type:none; margin:0;}
