@@ -19,12 +19,12 @@ slink /bin/ln /bin/busybox 777 0 0
 
 #busybox
 
-file /bin/busybox ../syso/systemx86/bin/busybox 755 0 0
+file /bin/busybox ../systemsoftware/V1/systemx86/bin/busybox 755 0 0
 
 #sysinfo
 
-file /usr/bin/sysinfo ../syso/systemx86/bin/sysinfo 755 0 0
+file /usr/bin/sysinfo ../systemsoftware/V1/systemx86/bin/sysinfo 755 0 0
 
 #initscript
 
-file /init ../syso/systemx86/usr/src/initramfs/init 755 0 0
+file /init ../systemsoftware/V1/systemx86/usr/src/initramfs/init 755 0 0

@@ -36,7 +36,7 @@ if [ -z "$busybox" ]; then
 fi
 
 echo "\n#busybox\n" >> initramfs_list
-echo "file /bin/busybox ../syso$busybox 755 0 0" >> initramfs_list
+echo "file /bin/busybox ../systemsoftware/V1$busybox 755 0 0" >> initramfs_list
 
 
 #sysinfo
@@ -48,7 +48,7 @@ if [ -z "$sysinfo" ]; then
 fi
 
 echo "\n#sysinfo\n" >> initramfs_list
-echo "file /usr/bin/sysinfo ../syso$sysinfo 755 0 0" >> initramfs_list
+echo "file /usr/bin/sysinfo ../systemsoftware/V1$sysinfo 755 0 0" >> initramfs_list
 
 #initscript
 init=$(find . | grep init$ | tr -d .)
@@ -59,5 +59,5 @@ if [ -z "$init" ]; then
 fi
 
 echo "\n#initscript\n" >> initramfs_list
-echo "file /init ../syso$init 755 0 0" >> initramfs_list
+echo "file /init ../systemsoftware/V1$init 755 0 0" >> initramfs_list
 

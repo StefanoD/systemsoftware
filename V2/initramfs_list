@@ -68,7 +68,6 @@ file /www/index.css ../systemsoftware/V2/systemarm/www/index.css 755 0 0
 file /www/index.html ../systemsoftware/V2/systemarm/www/index.html 755 0 0
 file /www/home.html ../systemsoftware/V2/systemarm/www/home.html 755 0 0
 file /www/style.css ../systemsoftware/V2/systemarm/www/style.css 755 0 0
-file /www/iframe_style.css ../systemsoftware/V2/systemarm/www/iframe_style.css 755 0 0
 
 #CGI
 
@@ -78,5 +77,3 @@ file /www/cgi-bin/network_config.sh ../systemsoftware/V2/systemarm/www/cgi-bin/n
 file /www/cgi-bin/show_tmp.sh ../systemsoftware/V2/systemarm/www/cgi-bin/show_tmp.sh 755 0 0
 file /www/cgi-bin/clear_tmp.sh ../systemsoftware/V2/systemarm/www/cgi-bin/clear_tmp.sh 755 0 0
 file /www/cgi-bin/sysinfo_html.sh ../systemsoftware/V2/systemarm/www/cgi-bin/sysinfo_html.sh 755 0 0
-file /www/cgi-bin/sysinfo.html ../systemsoftware/V2/systemarm/www/cgi-bin/sysinfo.html 755 0 0
-file /www/cgi-bin/script.sh ../systemsoftware/V2/systemarm/www/cgi-bin/script.sh 755 0 0
