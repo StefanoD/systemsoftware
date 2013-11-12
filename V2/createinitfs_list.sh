@@ -1,22 +1,38 @@
-#!/bin/bash
+#!/bin/sh
 
-#cd ../syso
+#------------Variables------------------
+gitpath=./systemsoftware/V2
+systempath=systemarm
+sourcepath=.$gitpath/$systempath
 
-echo "Creating sysinfo for arm..."
-arm-linux-gnueabi-gcc -static sysinfo.c -o systemarm/bin/sysinfo
+compiler="arm-linux-gnueabi-gcc -static"
+system=arm
+target=initramfs_list
+#---------------------------------------
 
-echo "Creating sysinfo html"
-
-arm-linux-gnueabi-gcc -static sysinfo_html.c -o systemarm/www/cgi-bin/sysinfo_html
-if [ -z "systemarm/bin/sysinfo" ]; then
-	echo "ERROR: sysinfo not created"
+Exists () {
+if [ ! -e "$1" ] 
+then
+	echo "ERROR: $1 does not exist"
 	exit 1
 fi
+}
 
-echo "Sysinfo created!"
-echo "Fill INITRAMFS_LIST"
-echo "# directory structure
+Create () {
+if [ -z $1 ] || [ -z $2 ];
+then
+ echo "Create needs 2 parameter!"
+ exit 1
+fi
+echo "\tCreating $2 from $1 for $system"
+$compiler $1 -o $systempath/$2
+Exists $systempath/$2
+}
 
+CreateDirectories() {
+echo "\n  Create Directories .."
+
+echo "
 dir /proc 755 0 0
 dir /sys 755 0 0
 dir /dev 755 0 0
@@ -36,118 +52,72 @@ dir /www/cgi-bin 755 0 0
 #links
 slink /bin/sh /bin/busybox 777 0 0
 slink /bin/cd /bin/busybox 777 0 0
-slink /bin/ln /bin/busybox 777 0 0 " > initramfs_list
+slink /bin/ln /bin/busybox 777 0 0 " > $target
+}
 
-#busybox
-busybox=$(find . | grep busybox | tr -d .)
+### $1 = sourcefile  $2 = target
+Copy() {
 
-if [ -z "$busybox" ]; then
-	echo "ERROR: busybox not found"
+if [ -z $1 ] || [ -z $2 ];
+then
+ echo "Copy needs 2 parameter!"
+ exit 1
+fi
+echo "\tCopy $1 to $2 .."
+prog=$(find . | grep $1$ | tr -d .)
+
+if [ -z "$prog" ]; then
+	echo "ERROR: $1 not found"
 	exit 1
 fi
 
-echo -e "\n#busybox\n" >> initramfs_list
-echo "file /bin/busybox ../systemsoftware/V2$busybox 755 0 0" >> initramfs_list
+echo "\n#$1" >> initramfs_list
+echo "file /$2 $gitpath$prog 755 0 0" >> initramfs_list
+}
 
+CopyDirectory() {
 
-#sysinfo
-sysinfo=$(find . | grep sysinfo$ | tr -d .)
-
-if [ -z "$sysinfo" ]; then
-	echo "ERROR: busybox not found"
-	exit 1
+if [ -z $1 ];
+then
+ echo "Copy needs a parameter!"
+ exit 1
 fi
-
-echo -e "\n#sysinfo\n" >> initramfs_list
-echo "file /usr/bin/sysinfo ../systemsoftware/V2$sysinfo 755 0 0" >> initramfs_list
+echo "\tCopy directory $1 from $sourcepath/$1.."
 
 
-#keymap
-keymap=$(find . | grep keymap$ | tr -d .)
-
-if [ -z "$keymap" ]; then
-        echo "ERROR: keymap not found"
-        exit 1
-fi
-
-echo -e "\n#keymap\n" >> initramfs_list
-echo "file /etc/keymap ../systemsoftware/V2$keymap 755 0 0" >> initramfs_list
-
-#initscript
-init=$(find . | grep init$ | tr -d .)
-
-if [ -z "$init" ]; then
-	echo "ERROR: busybox not found"
-	exit 1
-fi
-
-echo -e "\n#initscript\n" >> initramfs_list
-echo "file /init ../systemsoftware/V2$init 755 0 0" >> initramfs_list
-
-#udhcpc
-
-i=0
+echo "\n#$1" >> initramfs_list
+ls -p $systempath/$1/ | grep -v '/$' > .tmp
 while read line
 do
-    arrayUDHCPC[ $i ]="$line"
-    (( i++ ))
-done < <(ls systemarm/etc/udhcpc/)
-
-echo -e "\n#udhcpc\n" >> initramfs_list
-
-for i in "${arrayUDHCPC[@]}"
-do
-    echo "file /etc/udhcpc/$i ../systemsoftware/V2/systemarm/etc/udhcpc/$i 755 0 0" >> initramfs_list
-done
-
-#libraries
-
-i=0
-while read line
-do
-    arrayLIB[ $i ]="$line"
-    (( i++ ))
-done < <(ls systemarm/lib/)
-
-echo -e "\n#libraries\n" >> initramfs_list
-
-for i in "${arrayLIB[@]}"
-do
-    echo "file /lib/$i ../systemsoftware/V2/systemarm/lib/$i 755 0 0" >> initramfs_list
-done
-
-#WWW
-echo -e "\n#WWW\n" >> initramfs_list
-i=0
-while read line
-do
-    arrayWWW[ $i ]="$line"
-    (( i++ ))
-done < <(find systemarm/www/ -maxdepth 1 -type f -printf '%f\n')
-
-for i in "${arrayWWW[@]}"
-do
-    echo "file /www/$i ../systemsoftware/V2/systemarm/www/$i 755 0 0" >> initramfs_list
-done
-
-#cgi
-
-echo -e "\n#CGI\n" >> initramfs_list
-i=0
-while read line
-do
-    arrayCGI[ $i ]="$line"
-    (( i++ ))
-done < <(find systemarm/www/cgi-bin/ -type f -printf '%f\n') 
-
-for i in "${arrayCGI[@]}"
-do
-    echo "file /www/cgi-bin/$i ../systemsoftware/V2/systemarm/www/cgi-bin/$i 755 0 0" >> initramfs_list
-done
-
-echo -e "INITRAMFS_LIST CREATED"
+  
+    echo "file /$1/$line $sourcepath/$1/$line 755 0 0" >> initramfs_list
+done < .tmp
+rm .tmp
+}
 
 
 
+###### START SCRIPT ######
+echo "\n-------------------------------------------"
+echo "Sourcepath: $sourcepath"
+echo "Compiler:   $compiler"
+echo "System:     $system"
+echo "-------------------------------------------"
+echo "\n  Compile Sources"
+Create sysinfo.c bin/sysinfo
+Create sysinfo_html.c www/cgi-bin/sysinfo_html
+CreateDirectories
+
+Copy busybox bin/busybox
+Copy sysinfo usr/bin/sysinfo
+Copy keymap etc/keymap
+Copy init init
+
+CopyDirectory etc/udhcpc
+CopyDirectory lib
+CopyDirectory www
+CopyDirectory www/cgi-bin
+echo "\n"
+###### END SCRIPT ######
 
 
