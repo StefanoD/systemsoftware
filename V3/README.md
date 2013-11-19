@@ -1,7 +1,7 @@
 # V3
 
 ##### Was bewirkt das Kommando »make source«?
-* herunterladen und erstellen der Toolchain und aller benötigten Pakete
+* herunterladen aller angegeben Pakete für die Tool-Chain, Kernel, Busybox
 
 ##### In welchem Verzeichnis finden sich die heruntergeladenen Pakete?
 buildroot/dl
@@ -29,17 +29,39 @@ buildroot/dl
 ##### Messen Sie aus, wie lange Ihr System zum Booten benötigt.
 * ca 5sec
     
-##### Schauen Sie sich etwas im System um. 
+##### Schauen Sie sich etwas im System um.
+es ist nichts da
 
 
-###### Welche Prozesse laufen aktuell? 
+###### Welche Prozesse laufen aktuell?
+init
+-sh (shell)
+kernel worker/ threads
+klogd (Kernel log daemon)
+syslogd (Systme log daemon
 
 
 ###### Wieviel Hauptspeicher steht zur Verfügung? 
+128MB (qemu param)
+System nutzt ca. 9MB
+
+##### Gibt es eine Userverwaltung?
+Ja, es gibt den User Root
 
 
-###### Gibt es eine Userverwaltung? 
+###### Auf wieviel Festplatte kann zugegriffen werden?
+0
+
+##### Unterstützte Netzwerkkarten versatilepb
+qemu-system-arm -M versatilepb -net nic,model=?
+qemu: Supported NIC models: ne2k_pci,i82551,i82557b,i82559er,rtl8139,e1000,pcnet,virtio
 
 
-###### Auf wieviel Festplatte kann zugegriffen werden? ... 
+#### Kernel Shrinking
+Bootzeit: 1,5 Sekunde
+Festplattenbelegung: 5 MB
+
+
+
+
 
