@@ -18,6 +18,7 @@ buildroot/dl
 
 ##### In welchem Verzeichnis befindet sich die generierte Cross-Toolchain?
 * buildroot/toolchain
+* https://github.com/roroettg/systemsoftware/blob/master/V3/Makefile verwendet
 
 ##### Wo befinden sich die Dateien des Root-Filesystems? 
 * buildroot/output/images
@@ -60,6 +61,9 @@ qemu: Supported NIC models: ne2k_pci,i82551,i82557b,i82559er,rtl8139,e1000,pcnet
 #### Kernel Shrinking
 Bootzeit: 1,5 Sekunde
 Festplattenbelegung: 5 MB
+
+#### Wie lautet der Name des Cross-Compilers für die in V3 verwendete ARM-Plattform?
+https://github.com/roroettg/systemsoftware/blob/master/V3/Makefile
 
 
 
