@@ -10,14 +10,18 @@ buildroot/dl
 * buildroot/output
 
 ##### Welche Pakete benutzt buildroot für die Crosstool-Chain?
-* ls buildroot/package/
+* alle benötigten  (mehr als später für das embedded system gebraucht werden)
+* buildroot/toolchain
+
 ##### Welche Pakete installiert buildroot für das Target?
+* alle benötigten
 
 ##### In welches Verzeichnis legt buildroot die generierten Imagedateien ab?
 * buildroot/output/images
 
 ##### In welchem Verzeichnis befindet sich die generierte Cross-Toolchain?
 * buildroot/toolchain
+* buildroot/host
 * https://github.com/roroettg/systemsoftware/blob/master/V3/Makefile verwendet
 
 ##### Wo befinden sich die Dateien des Root-Filesystems? 
@@ -31,15 +35,14 @@ buildroot/dl
 * ca 5sec
     
 ##### Schauen Sie sich etwas im System um.
-es ist nichts da
-
+* rootfs wurde erstellt
 
 ###### Welche Prozesse laufen aktuell?
 init
 -sh (shell)
 kernel worker/ threads
 klogd (Kernel log daemon)
-syslogd (Systme log daemon
+syslogd (Systme log daemon)
 
 
 ###### Wieviel Hauptspeicher steht zur Verfügung? 
@@ -60,7 +63,7 @@ qemu: Supported NIC models: ne2k_pci,i82551,i82557b,i82559er,rtl8139,e1000,pcnet
 
 #### Kernel Shrinking
 Bootzeit: 1,5 Sekunde
-Festplattenbelegung: 5 MB
+Speicherbelegung: unter 1 MB
 
 #### Wie lautet der Name des Cross-Compilers für die in V3 verwendete ARM-Plattform?
 arm-none-linux-gnueabi-gcc
