@@ -63,7 +63,7 @@ Bootzeit: 1,5 Sekunde
 Festplattenbelegung: 5 MB
 
 #### Wie lautet der Name des Cross-Compilers für die in V3 verwendete ARM-Plattform?
-https://github.com/roroettg/systemsoftware/blob/master/V3/Makefile
+arm-none-linux-gnueabi-gcc
 
 
 
