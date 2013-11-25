@@ -1,4 +1,0 @@
-config BR2_PACKAGE_TIMEINFO
-        bool "timeinfo"
-        help
-			gives timeinfo
