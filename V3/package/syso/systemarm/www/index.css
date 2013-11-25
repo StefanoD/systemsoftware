@@ -1,0 +1,52 @@
+body { background: black;}
+#navigation { font-size:1.8em; padding: 0px 10px 10px 10px;}
+#main { position: absolute; top:10%; bottom: 5%}
+iframe { background:white; height:100%; width:100%; border: 2px solid #dddddd; border-radius:10px 75px 10px 50px;}
+
+#nav{
+    list-style:none;
+    font-weight:bold;
+    margin-bottom:10px;
+    float:left;
+    width:100%;
+    z-index:100;
+}
+#nav li{
+    float:left;
+    margin-right:10px;
+    position:relative;
+    z-index:1000;
+}
+#nav a{
+    display:block;
+	 border-radius: 3px;
+    padding:5px;
+    color:#fff;
+    text-decoration:none;
+}
+
+#nav ul{
+    background:#090909; 
+    background:rgba(255,255,255,0);
+    list-style:none;
+    position:absolute;
+    left:-9999px; 
+}
+#nav ul li{
+    padding-top:2px;
+    float:none;
+    z-index:1000;
+}
+#nav ul a{
+    white-space:nowrap;
+}
+#nav li:hover ul{
+    left:0;
+}
+
+#nav a:hover {color:#00BFFF; border: 1px solid white;}
+#nav li:hover a{ 
+    background:#090909;	 
+	 text-decoration:none;
+}
+
