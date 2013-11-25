@@ -69,6 +69,10 @@ Speicherbelegung: unter 1 MB
 arm-none-linux-gnueabi-gcc
 
 
+qemu-system-arm -M versatilepb -kernel output/images/zImage -initrd output/images/rootfs.cpio -serial stdio -append "console=ttyAMA0"
+
+
+
 
 
 
