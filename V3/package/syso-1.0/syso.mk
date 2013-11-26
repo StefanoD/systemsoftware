@@ -15,6 +15,8 @@ endef
 define SYSO_INSTALL_TARGET_CMDS
 		#copy compiled apps
 		cp $(@D)/src/out/* $(TARGET_DIR)/usr/bin/
+		mkdir -p -m 755 $(TARGET_DIR)/usr/src
+		cp $(@D)/src/*.c $(TARGET_DIR)/usr/src
 		#copy www files	
 		mkdir -p -m 755 $(TARGET_DIR)/www/cgi-bin
 		cp -r $(@D)/systemarm/* $(TARGET_DIR)/

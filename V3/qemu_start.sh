@@ -14,10 +14,12 @@ QEMU=qemu-system-arm
 QEMU_RAM=128
 #########################
 
+
+
 $QEMU -m $QEMU_RAM -M $TARGET -nographic \
  -kernel $KERNEL \
  -initrd $ROOTFS \
  -append "console=$CONSOLE" \
  -net nic,model=smc91c111,macaddr=00:00:00:00:00:16 -net vde,sock=/tmp/vde2-tap0.ctl
-
+ #-S -gdb tcp::22334 \
 #-net nic,vlan=0 -net tap,ifname=tap0,script=$SCRIPT
