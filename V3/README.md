@@ -72,7 +72,13 @@ arm-none-linux-gnueabi-gcc
 qemu-system-arm -M versatilepb -kernel output/images/zImage -initrd output/images/rootfs.cpio -serial stdio -append "console=ttyAMA0"
 
 
-
+#### Kernel Debugging
+* gdb toolchain von opt/toolchains/name/bin benutzen!
+* file /out/build/linux/vmlinux   läd virtuellen kernel für bp
+* gdb target remote localhost:22334  verbindet zu eigenem linux
+* 
+* l listet 10lines um punkt
+* b start_kernel macht breakpoint bei kernel startup
 
 
 
