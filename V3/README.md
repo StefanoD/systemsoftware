@@ -1,6 +1,6 @@
 # V3
 
-nützliche Links: [Debugging: O'Reilly][http://www.oreilly.de/german/freebooks/rlinux3ger/ch142.html]
+nützliche Links: [Debugging: O'Reilly](http://www.oreilly.de/german/freebooks/rlinux3ger/ch142.html)
 --------------------------------------------
 
 ##### Was bewirkt das Kommando »make source«?
