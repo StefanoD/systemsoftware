@@ -1,5 +1,8 @@
 # V3
 
+nützliche Links: [Debugging: O'Reilly][http://www.oreilly.de/german/freebooks/rlinux3ger/ch142.html]
+--------------------------------------------
+
 ##### Was bewirkt das Kommando »make source«?
 * herunterladen aller angegeben Pakete für die Tool-Chain, Kernel, Busybox
 
@@ -80,5 +83,10 @@ qemu-system-arm -M versatilepb -kernel output/images/zImage -initrd output/image
 * l listet 10lines um punkt
 * b start_kernel macht breakpoint bei kernel startup
 
-
+#### Userland Debugging
+* Benötigt -g parameter und  im buildroot unter build Debugging die Option stripped ausschalten
+* c files kopieren
+* gdb "programm"
+* directory /usr/src  liest src files ein (für  list befehl)
+* nützlich:  print "var", step, next, until, b "Zeile/function", delete "nummer des bp" 
 
