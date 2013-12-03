@@ -1,3 +1,3 @@
 #!/bin/sh
 echo "httpd.."
-httpd -h /www/ &
+httpd -v -h /www/ &
