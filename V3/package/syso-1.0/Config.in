@@ -1,7 +1,0 @@
-config BR2_PACKAGE_SYSO
-	bool "syso"
-	default n
-	help
-	  This is our own Syso Package
-	  
-	  https://github.com/roroettg/systemsoftware
