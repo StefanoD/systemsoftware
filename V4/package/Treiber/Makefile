@@ -11,5 +11,5 @@ default:
 	make ARCH=arm CROSS_COMPILE=$(CROSSP)/arm-none-linux-gnueabi- -C $(KDIR) M=$(PWD) modules
 
 clean:
-	rm -rf *~  modules.order Module.symvers *.mod.c *.o .*
+	rm -rf *~  modules.order Module.symvers *.mod.c *.o .* *.ko
 endif 
