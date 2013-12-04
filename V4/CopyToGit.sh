@@ -1,6 +1,6 @@
 #!/bin/sh
 
-BR_PATH=~/systemarm/buildroot-2013.08.1
+BR_PATH=~/buildroot-2013.08.1
 K_PATH=$BR_PATH/output/build/linux-3.10.7
 BB_PATH=$BR_PATH/output/build/busybox-1.21.1
 THIS=$(pwd)
