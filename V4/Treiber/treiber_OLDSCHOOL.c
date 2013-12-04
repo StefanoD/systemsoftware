@@ -15,7 +15,7 @@ static int __init ModInit(void)
 		printk(KERN_ALERT "Register driver failed!\n");
 		return -EIO;
 	}
-	printk(KERN_ALERT "Register driver successful!\n");
+	printk(KERN_ALERT "Register driver successful! Majornumber: %d\n", major);
 	return 0;
 }
  
