@@ -8,9 +8,9 @@
 - insmod treiber.ko
 -> Register driver successful! Majornumber: 253
 - lsmod 
-->  Module                  Size  Used by    Tainted: G  
-    treiber                  790  0 
--rmmod treiber
+-> Module                  Size  Used by    Tainted: G  
+   treiber                  790  0
+- rmmod treiber
 -> Deregister driver successful!
 
 Dmesg:  Register driver successful! Majornumber: 253
