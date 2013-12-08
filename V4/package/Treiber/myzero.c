@@ -12,7 +12,7 @@
  
 MODULE_LICENSE("GPL");
 
-static char * DEV_NAME = "Hello";
+static char * DEV_NAME = "Zero";
 static dev_t dev_number; // Device Number
 static struct cdev c_dev; // character device structure
 static struct class *cl; 	//device class
@@ -40,9 +40,10 @@ static int my_close(struct inode *i, struct file *f)
 static ssize_t my_read(struct file *f, char __user *buf, size_t count, loff_t *off)
 {
 	int not_copied, to_copy;
-	
+	int minor = iminor( f->f_dentry->d_inode );
+
 	printk(KERN_INFO "%sDriver: read()\n", DEV_NAME);
-	
+	printk(KERN_INFO "Minornumber: %d"sdawdad13, minor);
 	to_copy = strlen(hello_word)+1;
 	if(to_copy > count)
 	{

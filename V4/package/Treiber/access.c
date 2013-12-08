@@ -1,37 +1,51 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <string.h>
+#include <errno.h>
 
 
 int main()
 {
-	int FileDeskriptor, WrittenBytes, ReadBytes;
-	char buf[128];
-	char *s = "dasdasdasdasdsadasda";
+	int fileDeskriptor, writtenBytes, readBytes, i, j;
+	char buf[16];
+	static char *s = "Awesome String";
 	
-	FileDeskriptor = open( "/dev/mydevice", O_RDONLY);
-	if (FileDeskriptor < 0) 
+	fileDeskriptor = open("/dev/mydevice", O_RDWR);
+	if (fileDeskriptor < 0) 
 	{
-		printf("open failed\n");
+		perror("open failed\n");
 		return -1;
 	}
-	WrittenBytes = write( FileDeskriptor, buf, strlen(s));
-	if (WrittenBytes < 0)
+	printf("fileDeskriptor opened!\n");
+	writtenBytes = write(fileDeskriptor, s, strlen(s));
+	if (writtenBytes < 0)
 	{
-		printf("write failed\n");
+		perror("write failed\n");
 		return -1;
 	}
-	if ( WrittenBytes != strlen(s))
+	if ( writtenBytes != strlen(s))
 	{
-		printf("not all data written\n");
+		perror("not all data written\n");
+		return -2;
+	};
+	printf("Writing: %s\n", s);
+	readBytes = read(fileDeskriptor, buf, sizeof(buf));
+	if (readBytes < 0)
+	{
+		printf("read failed: %s\n", strerror(errno));
 		return -2;
 	}
-	ReadBytes = read( FileDeskriptor, buf, sizeof(buf));
-	if (ReadBytes <= 0)
-	{
-		printf("read failed\n");
-		return -2;
-	}
-	close(FileDeskriptor);
-	return ReadBytes;
+	printf("Read %d Bytes\n", readBytes);
+	printf("Buffer: %s\n", buf);
+	for (i=0; i<(sizeof(buf)/16); i++)
+	{ 
+		for( j=0; j<16; j++ ) 
+		{ 
+			printf( "%2.2x ",buf[i*16+j] ); 
+		} 
+		printf("\n"); 
+	} 
+	close(fileDeskriptor);
+	printf("fileDeskriptor closed\n");
+	return readBytes;
 }
