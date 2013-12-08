@@ -43,7 +43,7 @@ static ssize_t my_read(struct file *f, char __user *buf, size_t count, loff_t *o
 	int minor = iminor( f->f_dentry->d_inode );
 
 	printk(KERN_INFO "%sDriver: read()\n", DEV_NAME);
-	printk(KERN_INFO "Minornumber: %d"sdawdad13, minor);
+	printk(KERN_INFO "Minornumber: %d\n", minor);
 	to_copy = strlen(hello_word)+1;
 	if(to_copy > count)
 	{
@@ -71,7 +71,7 @@ static struct file_operations fops =
 static int __init ModInit(void)
 {
 	printk(KERN_INFO "%sDriver: Registering...\n", DEV_NAME);
-	if (alloc_chrdev_region(&dev_number,0,1, "TestDriver") < 0) 
+	if (alloc_chrdev_region(&dev_number,0,2, "MyZeroDriver") < 0) 
 	{
 		printk(KERN_ALERT "%sDriver: Reserving Devicenumber failed!\n", DEV_NAME);
 		return -EIO;
@@ -79,24 +79,24 @@ static int __init ModInit(void)
 	if ((cl = class_create(THIS_MODULE, "chardrv")) == NULL)
 	{
 		printk(KERN_ALERT "%sDriver: Creating Device Class failed", DEV_NAME);
-		unregister_chrdev_region(dev_number, 1);
+		unregister_chrdev_region(dev_number, 2);
 		return -EIO;
 	}
-	if (device_create(cl, NULL, dev_number, NULL, "mydevice") == NULL)
+	if (device_create(cl, NULL, dev_number, NULL, "myzero") == NULL)
 	{
 		printk(KERN_ALERT "%sDriver: Populating Device Class failed", DEV_NAME);
 		class_destroy(cl);
-		unregister_chrdev_region(dev_number, 1);
+		unregister_chrdev_region(dev_number, 2);
 		return -EIO;
 	}
 	
 	cdev_init(&c_dev, &fops);
-	if (cdev_add(&c_dev, dev_number, 1) == -1)
+	if (cdev_add(&c_dev, dev_number, 2) == -1)
 	{
 		printk(KERN_ALERT "%sDriver: Driver registering failed", DEV_NAME);
 		device_destroy(cl, dev_number);
 		class_destroy(cl);
-		unregister_chrdev_region(dev_number, 1);
+		unregister_chrdev_region(dev_number, 2);
 		return -EIO;
 	}
 	
@@ -111,7 +111,7 @@ static void __exit ModExit(void)
 	printk(KERN_INFO "%sDriver: Deregistering...\n", DEV_NAME);
 	device_destroy(cl, dev_number);
 	class_destroy(cl);
-	unregister_chrdev_region(dev_number, 1);
+	unregister_chrdev_region(dev_number, 2);
 	printk(KERN_INFO "%sDriver: Deregistered\n", DEV_NAME);
 	printk(KERN_INFO "Major, Minor: %d, %d \n", MAJOR(dev_number), MINOR(dev_number));
 	return;	

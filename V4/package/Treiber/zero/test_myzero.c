@@ -10,7 +10,7 @@ int main()
 	char buf[16];
 	
 	printf("Trying to open FileDeskriptor...\n");
-	fileDeskriptor = open("/dev/mydevice", O_RDONLY);
+	fileDeskriptor = open("/dev/myzero", O_RDONLY);
 	if (fileDeskriptor < 0) 
 	{
 		perror("open failed\n");
