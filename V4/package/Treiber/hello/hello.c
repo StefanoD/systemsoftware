@@ -75,7 +75,7 @@ static int __init ModInit(void)
 		printk(KERN_ALERT "%sDriver: Reserving Devicenumber failed!\n", DEV_NAME);
 		return -EIO;
 	}
-	if ((cl = class_create(THIS_MODULE, "chardrv")) == NULL)
+	if ((cl = class_create(THIS_MODULE, "chardrv_hello")) == NULL)
 	{
 		printk(KERN_ALERT "%sDriver: Creating Device Class failed", DEV_NAME);
 		unregister_chrdev_region(dev_number, 1);

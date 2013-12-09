@@ -12,13 +12,11 @@
  
 MODULE_LICENSE("GPL");
 
-static char * DEV_NAME = "Zero";
+static char * DEV_NAME = "Null";
 static dev_t dev_number; // Device Number
 static struct cdev c_dev; // character device structure
 static struct class *cl; 	//device class
 static atomic_t open_count = ATOMIC_INIT(-1);
-static char * hello_word = "Hello World";
-static char * zero = "0";
 
 static int my_open(struct inode *i, struct file *f)
 {
@@ -39,32 +37,9 @@ static int my_close(struct inode *i, struct file *f)
 	return 0;
 }
 static ssize_t my_read(struct file *f, char __user *buf, size_t count, loff_t *off)
-{
-	int not_copied = 0, to_copy = 0;
-	int minor = iminor( f->f_dentry->d_inode );
-
+{	
 	printk(KERN_INFO "%sDriver: read()\n", DEV_NAME);
-	printk(KERN_INFO "Minornumber: %d\n", minor);
-
-	if (minor == 0)
-	{
-		to_copy = strlen(zero)+1;
-		if(to_copy > count)
-		{
-			to_copy = count;
-		}
-		not_copied = copy_to_user(buf, zero, to_copy);
-	} 
-	if (minor == 1)
-	{
-		to_copy = strlen(hello_word)+1;
-		if(to_copy > count)
-		{
-			to_copy = count;
-		}
-		not_copied = copy_to_user(buf, hello_word, to_copy);
-	}
-	return to_copy - not_copied;
+	return 0;
 }
 static ssize_t my_write(struct file *f, const char __user *buf, size_t count, loff_t *off)
 {
@@ -83,39 +58,34 @@ static struct file_operations fops =
 
 static int __init ModInit(void)
 {
-	int minor;
 	printk(KERN_INFO "%sDriver: Registering...\n", DEV_NAME);
-	/* Reservierung der Treiber Nummer */
-	if (alloc_chrdev_region(&dev_number,0,2, "MyZeroDriver") < 0) 
+	if (alloc_chrdev_region(&dev_number,0,1, "NullDriver") < 0) 
 	{
 		printk(KERN_ALERT "%sDriver: Reserving Devicenumber failed!\n", DEV_NAME);
 		return -EIO;
 	}
-	if ((cl = class_create(THIS_MODULE, "chardrv_zero")) == NULL)
+	if ((cl = class_create(THIS_MODULE, "chardrv_null")) == NULL)
 	{
 		printk(KERN_ALERT "%sDriver: Creating Device Class failed", DEV_NAME);
-		unregister_chrdev_region(dev_number, 2);
+		unregister_chrdev_region(dev_number, 1);
 		return -EIO;
 	}
 	printk(KERN_INFO "%sDriver: Creating Device...\n", DEV_NAME);
-	for (minor = 0; minor < 2; minor++)
+	if (device_create(cl, NULL, dev_number, NULL, "mynull") == NULL)
 	{
-		if (device_create(cl, NULL, MKDEV(MAJOR(dev_number),minor), NULL, "myzero%d",minor) == NULL)
-		{
-			printk(KERN_ALERT "%sDriver: Populating Device Class failed", DEV_NAME);
-			class_destroy(cl);
-			unregister_chrdev_region(dev_number, 2);
-			return -EIO;
-		}
-		printk(KERN_INFO "%sDriver: Created Device [Major:%d Minor:%d]\n", DEV_NAME, MAJOR(dev_number), minor);
+		printk(KERN_ALERT "%sDriver: Populating Device Class failed", DEV_NAME);
+		class_destroy(cl);
+		unregister_chrdev_region(dev_number, 1);
+		return -EIO;
 	}
+	printk(KERN_INFO "%sDriver: Created Device [Major:%d Minor:%d]\n", DEV_NAME, MAJOR(dev_number), MINOR(dev_number));
 	cdev_init(&c_dev, &fops);
-	if (cdev_add(&c_dev, dev_number, 2) == -1)
+	if (cdev_add(&c_dev, dev_number, 1) == -1)
 	{
 		printk(KERN_ALERT "%sDriver: Driver registering failed", DEV_NAME);
 		device_destroy(cl, dev_number);
 		class_destroy(cl);
-		unregister_chrdev_region(dev_number, 2);
+		unregister_chrdev_region(dev_number, 1);
 		return -EIO;
 	}
 	
@@ -126,16 +96,12 @@ static int __init ModInit(void)
  
 static void __exit ModExit(void)
 {
-	int minor;
 	printk(KERN_INFO "%sDriver: Deregistering...\n", DEV_NAME);
 	printk(KERN_INFO "%sDriver: Destroying Devices...\n", DEV_NAME);
-	for(minor = 0; minor < 2; minor++)
-	{
-	device_destroy(cl, MKDEV(MAJOR(dev_number),minor));
-	printk(KERN_INFO "%sDriver: Device destroyed [Major:%d Minor:%d]\n", DEV_NAME, MAJOR(dev_number), minor);
-	}
+	device_destroy(cl, dev_number);
+	printk(KERN_INFO "%sDriver: Device destroyed [Major:%d Minor:%d]\n", DEV_NAME, MAJOR(dev_number), MINOR(dev_number));
 	class_destroy(cl);
-	unregister_chrdev_region(dev_number, 2);
+	unregister_chrdev_region(dev_number, 1);
 	printk(KERN_INFO "%sDriver: Deregistered\n", DEV_NAME);
 	return;	
 }
