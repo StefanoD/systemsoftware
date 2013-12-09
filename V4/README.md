@@ -20,3 +20,8 @@ Dmesg:  Register driver successful! Majornumber: 253
 #### Testen Sie den Treiber mit dem Systemprogramm cat. Ihr Treiber liefert ständig »hello world« zurück. Warum?
 Testen Sie den Treiber mit dem Systemprogramm cat. Ihr Treiber liefert ständig »hello world« zurück. Warum?
 
+
+
+kernel log level setzen
+echo "6" > /proc/sys/kernel/printk 
+
