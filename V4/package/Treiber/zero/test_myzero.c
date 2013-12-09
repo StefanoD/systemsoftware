@@ -8,9 +8,32 @@ int main()
 {
 	int fileDeskriptor, writtenBytes, readBytes, i, j;
 	char buf[16];
-	
+	printf("Testing myzero0\n");
 	printf("Trying to open FileDeskriptor...\n");
-	fileDeskriptor = open("/dev/myzero", O_RDONLY);
+	fileDeskriptor = open("/dev/myzero0", O_RDONLY);
+	if (fileDeskriptor < 0) 
+	{
+		perror("open failed\n");
+		return -1;
+	}
+	printf("FileDeskriptor opened!\n");
+	printf("Trying to read...\n");
+	readBytes = read(fileDeskriptor, buf, sizeof(buf));
+	if (readBytes < 0)
+	{
+		printf("read failed: %s\n", strerror(errno));
+		return -2;
+	}
+	printf("Read %d Bytes!\n", readBytes);
+	printf("Buffer: %s\n", buf);
+	printf("FileDeskriptor closing...\n");
+	close(fileDeskriptor);
+	printf("FileDeskriptor closed\n\n\n");
+
+	/*MyZero1 Test */
+	printf("Testing myzero1\n");
+	printf("Trying to open FileDeskriptor...\n");
+	fileDeskriptor = open("/dev/myzero1", O_RDONLY);
 	if (fileDeskriptor < 0) 
 	{
 		perror("open failed\n");
@@ -29,5 +52,7 @@ int main()
 	printf("FileDeskriptor closing...\n");
 	close(fileDeskriptor);
 	printf("FileDeskriptor closed\n");
-	return readBytes;
+
+	return 0;
+	
 }
