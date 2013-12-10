@@ -1,6 +1,6 @@
 #!/bin/sh
 
-BUILDROOT_PATH=~/systemarm/buildroot-2013.08.1
+BUILDROOT_PATH=~/buildroot-2013.08.1
 THIS=$(pwd)
 echo "Installing rsa and dsa keys.."
 if [ ! -d $BUILDROOT_PATH/output/target/etc/dropbear ] ; then

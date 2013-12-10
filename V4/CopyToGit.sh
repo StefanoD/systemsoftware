@@ -16,3 +16,6 @@ cp $BR_PATH/.config $THIS/br.config
 cp $BB_PATH/.config $THIS/bb.config
 cp $K_PATH/.config $THIS/k.config
 
+echo "\n \033[49;1;31m Fertig! Buildroot neu erstellen nicht vergessen! \033[0m"
+
+

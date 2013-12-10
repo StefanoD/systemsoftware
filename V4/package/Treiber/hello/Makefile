@@ -15,3 +15,7 @@ default:
 clean:
 	 rm -rf *~  modules.order Module.symvers *.mod.c *.o .* *.ko
 endif 
+
+install: 
+	scp *.ko root@192.168.29.25:~/
+	scp test_hello root@192.168.29.25:~/
