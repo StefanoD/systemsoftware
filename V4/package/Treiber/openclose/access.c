@@ -16,6 +16,7 @@ int main()
 		perror("open failed\n");
 		return -1;
 	}
+	sleep(5);
 	printf("fileDeskriptor opened!\n");
 	writtenBytes = write(fileDeskriptor, s, strlen(s));
 	if (writtenBytes < 0)
