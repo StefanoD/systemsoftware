@@ -15,7 +15,7 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Florian Fröhlich");
 MODULE_DESCRIPTION("My first driver... oh yeah");
 
-#define BUFFER_LIMIT 1024
+#define BUFFER_LIMIT 100
 #define BUFFER_SIZE 5
 #define READ_POSSIBLE (pos > 0)
 #define WRITE_POSSIBLE (pos < BUFFER_SIZE)
@@ -47,8 +47,9 @@ ssize_t buf_read(struct file *instance, char __user *buf, size_t len, loff_t *of
 		return -ERESTART;
 	}
 
-	to_copy = min(len,(size_t)BUFFER_LIMIT);
+	to_copy = min(len,(size_t)BUFFER_LIMIT-1);
 	not_copied = copy_to_user(buf, k_buffer[--pos], to_copy);
+	k_buffer[pos][to_copy]="/0";
 	printk(KERN_DEBUG "buf: read.. pos=%d\n", pos);
 	wake_up_interruptible(&write_queue);
 
@@ -65,7 +66,7 @@ ssize_t buf_write(struct file *instance, char __user *buf, size_t len, loff_t *o
 	if(wait_event_interruptible(write_queue, WRITE_POSSIBLE)) 
 		return -ERESTART;
 
-	to_copy = min(len,(size_t)BUFFER_LIMIT);
+	to_copy = min(len,(size_t)BUFFER_LIMIT-1);
 	not_copied = copy_from_user(k_buffer[pos++], buf, to_copy);
 	
 	printk(KERN_DEBUG "buffer: %s", buf);

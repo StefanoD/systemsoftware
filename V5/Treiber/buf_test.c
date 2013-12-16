@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <fcntl.h>
 
 #define BUFFER_LIMIT 100
@@ -18,21 +19,26 @@ int main (int argc, char* argv[])
 
 	if(argc > 1)
 	{
-		while(1)
-		{
-			int off = sizeof(argv[1])+1;	
+		int off = sizeof(argv[1])+1;	//size must be larger due to EOF sign
 			if(off > BUFFER_LIMIT)
 				off=BUFFER_LIMIT;
-			printf("test_buf write %s (%d)in buffer\n",argv[1],off);
+
+		while(1)
+		{
+			int st = rand()%1000000;
 			write(fd, argv[1], off);
+			printf("test_buf write %s (%d)in buffer  (sleep%d)\n",argv[1],off, st);
+			usleep(st);
 		}
 	}
 	else
 	{
 		while(1)
-		{
+		{	
+			int st = rand()%1000000;
 			read(fd, read_buf, BUFFER_LIMIT);
-			printf ("test_buf read: %s\n", read_buf);
+			printf ("test_buf read: %s (sleep%d)\n", read_buf, st);
+			usleep(st);
 		}
 	}
 	close(fd);
