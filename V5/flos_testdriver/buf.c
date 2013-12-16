@@ -9,41 +9,70 @@
 #include <linux/wait.h>
 #include <asm/uaccess.h> //copy_to/from_user
 #include <linux/sched.h>
+#include <linux/kfifo.h>
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Florian Fröhlich");
 MODULE_DESCRIPTION("My first driver... oh yeah");
 
-const int BUFFER_LIMIT=1024;
-char char_buffer[1024];
-int pos =0;
+#define BUFFER_LIMIT 1024
+#define BUFFER_SIZE 5
+#define READ_POSSIBLE (pos > 0)
+#define WRITE_POSSIBLE (pos < BUFFER_SIZE)
 
 
-static wait_queue_head_t wq; //queue for buffer
+char k_buffer[BUFFER_SIZE][BUFFER_LIMIT];
+int pos =0; //buffer position
 
-ssize_t buf_read(struct file *f, char __user *buf, size_t len, loff_t *off)
+
+//queue for buffer
+static wait_queue_head_t write_queue; 
+static wait_queue_head_t read_queue; 
+
+
+ssize_t buf_read(struct file *instance, char __user *buf, size_t len, loff_t *off)
 {
-	printk(KERN_INFO "buf: Driver read()\n");
-	if(wait_event_interruptible(wq,(pos>0)) ) 
+	size_t to_copy, not_copied;
+	printk(KERN_DEBUG "buf: Driver read()");
+
+	if(!READ_POSSIBLE && instance->f_flags&O_NONBLOCK)
+	{
+		printk(KERN_DEBUG " -> Nonblock!\n");
+		return -EAGAIN;
+	} 
+		
+	if(wait_event_interruptible(read_queue, READ_POSSIBLE) )
+	{
+		printk(KERN_DEBUG " some error occured -> RESTART!\n");
 		return -ERESTART;
-	
-	if(copy_to_user(buf, char_buffer, len))
-		return -EFAULT;
-	
-	return len;
+	}
+
+	to_copy = min(len,(size_t)BUFFER_LIMIT);
+	not_copied = copy_to_user(buf, k_buffer[--pos], to_copy);
+	printk(KERN_DEBUG "buf: read.. pos=%d\n", pos);
+	wake_up_interruptible(&write_queue);
+
+	return to_copy - not_copied;
 }
 
-ssize_t buf_write(struct file *f, char __user *buf, size_t len, loff_t *off)
+ssize_t buf_write(struct file *instance, char __user *buf, size_t len, loff_t *off)
 {
+	size_t to_copy = len, not_copied = len;
+	printk(KERN_DEBUG "buf: Driver write()");
+
+	if(!WRITE_POSSIBLE && instance->f_flags&O_NONBLOCK) 
+		return -EAGAIN;
+	if(wait_event_interruptible(write_queue, WRITE_POSSIBLE)) 
+		return -ERESTART;
+
+	to_copy = min(len,(size_t)BUFFER_LIMIT);
+	not_copied = copy_from_user(k_buffer[pos++], buf, to_copy);
 	
-	printk(KERN_INFO "buf: Driver write()\n");
-	
-	int nret = copy_from_user(char_buffer, buf, len);
 	printk(KERN_DEBUG "buffer: %s", buf);
-	pos +=len - nret;
-	wake_up_interruptible(&wq);
-		
-	return len;
+	printk(KERN_DEBUG " pos=%d\n", pos);
+	wake_up_interruptible(&read_queue);
+
+	return to_copy-not_copied;
 }
 
 int buf_open(struct inode *i, struct file *f)
@@ -98,7 +127,9 @@ int __init buf_init(void)
 		unregister_chrdev_region(first, 1);
 		return -1;
    }
-	init_waitqueue_head( &wq );
+	init_waitqueue_head( &write_queue );
+	init_waitqueue_head( &read_queue );
+	
   	printk(KERN_INFO "buf <%d, %d>: driver registered\n", MAJOR(first), MINOR(first));
 	return 0;
 }
