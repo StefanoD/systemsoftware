@@ -3,7 +3,7 @@
 #include <linux/timer.h>
 #include <linux/sched.h>
 #include <linux/init.h>
-#include <asm/msr.h> 
+#include <asm-/msr.h> 
 
 static struct timer_list mytimer;
 unsigned long ini, end, max = 0, min = 99999999999999, last_jiff;
