@@ -15,7 +15,7 @@ MODULE_LICENSE("GPL");
 
 static char * DEV_NAME = "Hello2";
 static dev_t dev_number; // Device Number
-static struct cdev c_dev; // character device structure
+static struct cdev driver_object; // character device structure
 static struct class *cl; 	//device class
 static atomic_t open_count = ATOMIC_INIT(-1);
 static char * hello_world = "Hello World\n";
@@ -113,8 +113,8 @@ static int __init ModInit(void)
 		return -EIO;
 	}
 	
-	cdev_init(&c_dev, &fops);
-	if (cdev_add(&c_dev, dev_number, 1) == -1)
+	cdev_init(&driver_object, &fops);
+	if (cdev_add(&driver_object, dev_number, 1) == -1)
 	{
 		printk(KERN_ALERT "%sDriver: Driver registering failed", DEV_NAME);
 		device_destroy(cl, dev_number);
@@ -134,6 +134,7 @@ static void __exit ModExit(void)
 	printk(KERN_INFO "%sDriver: Deregistering...\n", DEV_NAME);
 	device_destroy(cl, dev_number);
 	class_destroy(cl);
+	cdev_del(&driver_object);
 	unregister_chrdev_region(dev_number, 1);
 	printk(KERN_INFO "%sDriver: Deregistered\n", DEV_NAME);
 	printk(KERN_INFO "Major, Minor: %d, %d \n", MAJOR(dev_number), MINOR(dev_number));

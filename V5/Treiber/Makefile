@@ -1,7 +1,7 @@
 SRCS=$(wildcard *_test.c)
 
 ifneq (${KERNELRELEASE},)
-    obj-m := buf.o hello2.o  tasklet.o flosd.o #timer.o
+    obj-m := buf.o hello2.o  tasklet.o flosd.o lock.o open_once.o
 else
 	KERNEL_SOURCE := ~/buildroot-2013.08.1/output/build/linux-3.10.7
 	CROSSP := /opt/toolchains/Sourcery-CodeBench-ARM-2013.05/bin

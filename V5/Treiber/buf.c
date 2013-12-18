@@ -1,94 +1,107 @@
-#include <linux/version.h>
-#include <linux/module.h>
-#include <linux/kernel.h> 
-#include <linux/types.h> //defines dev_t
-#include <linux/fs.h> // for registering!
-#include <linux/kdev_t.h> //makros for major and minor number
-#include <linux/device.h>
-#include <linux/cdev.h>
-#include <linux/wait.h>
-#include <asm/uaccess.h> //copy_to/from_user
-#include <linux/sched.h>
-#include <linux/kfifo.h>
+#include <linux/init.h>    //
+#include <linux/module.h>  //
+#include <linux/version.h> //
+#include <linux/fs.h>      // for registering!
+#include <linux/kernel.h>  //
+#include <linux/device.h>  //
+#include <linux/kdev_t.h>  // makros for major and minor number
+#include <linux/types.h>   // defines dev_t
+#include <linux/cdev.h>    //
+#include <linux/wait.h>    //
+#include <asm/uaccess.h>   // copy_to/from_user
+#include <linux/sched.h>   // scheduling (waitqueue)
 
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Florian Fröhlich");
-MODULE_DESCRIPTION("My first driver... oh yeah");
+MODULE_AUTHOR("Florian Froehlich");
+MODULE_DESCRIPTION("a simple buffer driver");
+
+#define DEV_NAME "buf"
+#define DEV_CLASS "buf_class"
+#define DEV_DRIVER "buf_driver"
+
+static dev_t DEV_NUMBER; // var for first device number
+static struct cdev c_dev; //global chardevice struct
+static struct class *cl;	//global device class
 
 #define BUFFER_LIMIT 100
 #define BUFFER_SIZE 5
 #define READ_POSSIBLE (pos > 0)
 #define WRITE_POSSIBLE (pos < BUFFER_SIZE)
 
-
-char k_buffer[BUFFER_SIZE][BUFFER_LIMIT];
 int pos =0; //buffer position
+char k_buffer[BUFFER_SIZE][BUFFER_LIMIT];
+static wait_queue_head_t write_queue;
+static wait_queue_head_t read_queue;
 
 
-//queue for buffer
-static wait_queue_head_t write_queue; 
-static wait_queue_head_t read_queue; 
+static int buf_open(struct inode *i, struct file *instance)
+{
+	printk(KERN_INFO "%s: open()\n", DEV_DRIVER);
+	return 0;
+}
 
 
-ssize_t buf_read(struct file *instance, char __user *buf, size_t len, loff_t *off)
+static int buf_close(struct inode *i, struct file *instance)
+{
+	printk(KERN_INFO "%s: close()\n", DEV_DRIVER);
+	return 0;
+}
+
+
+static ssize_t buf_read(struct file *instance, char __user *buf, size_t len, loff_t *off)
 {
 	size_t to_copy, not_copied;
-	printk(KERN_DEBUG "buf: Driver read()");
+	printk(KERN_INFO "%s: read()\n", DEV_DRIVER);
 
 	if(!READ_POSSIBLE && instance->f_flags&O_NONBLOCK)
 	{
-		printk(KERN_DEBUG " -> Nonblock!\n");
+		printk(KERN_DEBUG "%s: some error occured -> EAGAIN\n", DEV_DRIVER);
 		return -EAGAIN;
 	} 
 		
 	if(wait_event_interruptible(read_queue, READ_POSSIBLE) )
 	{
-		printk(KERN_DEBUG " some error occured -> RESTART!\n");
+		printk(KERN_DEBUG "%s: some error occured -> ERESTART\n", DEV_DRIVER);
 		return -ERESTART;
 	}
 
 	to_copy = min(len,(size_t)BUFFER_LIMIT-1);
 	not_copied = copy_to_user(buf, k_buffer[--pos], to_copy);
-	k_buffer[pos][to_copy]="/0";
-	printk(KERN_DEBUG "buf: read.. pos=%d\n", pos);
+	k_buffer[pos][to_copy]=(int)"/0";
+	
+	printk(KERN_DEBUG "%s: read.. pos=%d\n",DEV_DRIVER, pos);
 	wake_up_interruptible(&write_queue);
 
-	return to_copy - not_copied;
+	return (ssize_t)to_copy - not_copied;
 }
 
-ssize_t buf_write(struct file *instance, char __user *buf, size_t len, loff_t *off)
+static ssize_t buf_write(struct file *instance, const char __user *buf, size_t len, loff_t *off)
 {
 	size_t to_copy = len, not_copied = len;
-	printk(KERN_DEBUG "buf: Driver write()");
+	printk(KERN_INFO "%s: write()\n", DEV_DRIVER);
 
-	if(!WRITE_POSSIBLE && instance->f_flags&O_NONBLOCK) 
+	if(!WRITE_POSSIBLE && instance->f_flags&O_NONBLOCK)
+	{
+		printk(KERN_DEBUG "%s: O_NONBLOCK -> EAGAIN\n", DEV_DRIVER);
 		return -EAGAIN;
+	}
+		
 	if(wait_event_interruptible(write_queue, WRITE_POSSIBLE)) 
+	{
+		printk(KERN_DEBUG "%s: wait_event interrupted -> ERESTART\n", DEV_DRIVER);
 		return -ERESTART;
-
+	}
 	to_copy = min(len,(size_t)BUFFER_LIMIT-1);
 	not_copied = copy_from_user(k_buffer[pos++], buf, to_copy);
 	
-	printk(KERN_DEBUG "buffer: %s", buf);
+	printk(KERN_DEBUG "%s: buffer=%s", DEV_DRIVER, (char *)buf);
 	printk(KERN_DEBUG " pos=%d\n", pos);
 	wake_up_interruptible(&read_queue);
 
-	return to_copy-not_copied;
+	return (ssize_t)to_copy-not_copied;
 }
 
-int buf_open(struct inode *i, struct file *f)
-{
-	printk(KERN_INFO "buf: Driver open()\n");
-	return 0;
-}
-
-int buf_close(struct inode *i, struct file *f)
-{
-	printk(KERN_INFO "buf: Driver close()\n");
-	return 0;
-}
-
-static struct file_operations buf_fops =
+static struct file_operations fops =
 {
 	.owner = THIS_MODULE,
 	.open = buf_open,
@@ -97,51 +110,55 @@ static struct file_operations buf_fops =
 	.write = buf_write
 };
 
-static dev_t first; // var for first device number
-static struct cdev c_dev; //global chardevice struct
-static struct class *cl;	//global device class
-
-
 int __init buf_init(void)
 {
-	if(alloc_chrdev_region(&first, 0, 3, "buf") < 0)
+	printk(KERN_INFO "%s: init()\n", DEV_DRIVER);
+	if (alloc_chrdev_region(&DEV_NUMBER,0,1, DEV_DRIVER) < 0) 
 	{
-		printk(KERN_ERR "buf: could not register driver!\n");
-		return -1;
+		printk(KERN_ALERT "%s: reserving device number failed!\n", DEV_DRIVER);
+		return -EIO;
 	}
-	if ((cl = class_create(THIS_MODULE, "buf")) == NULL)
-   {
-    	unregister_chrdev_region(first, 1);
-    	return -1;
-   }
-   if (device_create(cl, NULL, first, NULL, "buf") == NULL)
+	if ((cl = class_create(THIS_MODULE, DEV_CLASS)) == NULL)
 	{
-		class_destroy(cl);
-		unregister_chrdev_region(first, 1);
-		return -1;
+		printk(KERN_ALERT "%s: creating device class failed", DEV_DRIVER);
+		unregister_chrdev_region(DEV_NUMBER, 1);
+		return -EIO;
 	}
-   cdev_init(&c_dev, &buf_fops);
-   if (cdev_add(&c_dev, first, 1) == -1)
-   {
-		device_destroy(cl, first);
+	if (device_create(cl, NULL, DEV_NUMBER, NULL, DEV_NAME) == NULL)
+	{
+		printk(KERN_ALERT "%s: populating device class failed", DEV_DRIVER);
 		class_destroy(cl);
-		unregister_chrdev_region(first, 1);
-		return -1;
-   }
+		unregister_chrdev_region(DEV_NUMBER, 1);
+		return -EIO;
+	}
+	
+	cdev_init(&c_dev, &fops);
+	if (cdev_add(&c_dev, DEV_NUMBER, 1) == -1)
+	{
+		printk(KERN_ALERT "%s_driver: registering failed", DEV_DRIVER);
+		device_destroy(cl, DEV_NUMBER);
+		class_destroy(cl);
+		unregister_chrdev_region(DEV_NUMBER, 1);
+		return -EIO;
+	}
 	init_waitqueue_head( &write_queue );
 	init_waitqueue_head( &read_queue );
 	
-  	printk(KERN_INFO "buf <%d, %d>: driver registered\n", MAJOR(first), MINOR(first));
+   printk(KERN_INFO "%s: registered\n", DEV_DRIVER);
+	printk(KERN_INFO "major, minor: %d, %d \n", MAJOR(DEV_NUMBER), MINOR(DEV_NUMBER));
 	return 0;
 }
 
 void __exit buf_exit(void)
 {
+	printk(KERN_INFO "%s: exit()\n", DEV_DRIVER);
+	device_destroy(cl, DEV_NUMBER);
+	class_destroy(cl);
 	cdev_del(&c_dev);
-  	device_destroy(cl, first);
-  	class_destroy(cl);
-  	unregister_chrdev_region(first, 1);
-	printk(KERN_INFO "buf: driver unregistered\n");
+	unregister_chrdev_region(DEV_NUMBER, 1);
+	printk(KERN_INFO "%s: deregistered\n", DEV_DRIVER);
+	printk(KERN_INFO "major, minor: %d, %d \n", MAJOR(DEV_NUMBER), MINOR(DEV_NUMBER));
+	return;	
 }
 
 
