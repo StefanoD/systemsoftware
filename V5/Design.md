@@ -20,36 +20,39 @@
 
 ##1. Aufgabenstellung
 
-Wie bereits in einer früheren Aufgabe, soll ein Treiber geschrieben werden. Dieser soll einen eigenen Puffer besitzen auf den lesend und schreibend zugegriffen werden kann. Der Zugriff soll nun aber über Threads geschehen.
+Wie bereits in einer früheren Aufgabe, ist das Ziel die Programmierung eines Treibers. Dieser soll einen eigenen Puffer besitzen, auf den lesend und schreibend zugegriffen werden kann. Anders als bisher wird der Speicher für den Puffer nun aber dynamisch reserviert. Der Zugriff darauf soll nun außerdem asynchron über Threads geschehen.
 
-Wir wollen damit den Zugriff auf einen Puffer auf einer externen Hardware, die über den Treiber angesprochen wird, simulieren. Über die Threads lässt sich der Lese-/Schreibzugriff asynchron realisieren. 
+Das Ziel des ganzen ist es, einen Zugriff auf eine externe Hardware zu simulieren.
 
 ###1.1 Vorgaben
-Der zu benutzende Speicher soll dynamisch mit kmalloc() reserviert werden. 
-Das schreiben und Lesen des Puffers soll nun ausschließlich über Kernel-Threads realisiert werden.
-Kritische Bereiche sollen, wenn möglich, vermieden werden.
-Es darf keine Race-Conditions geben.
-Der Schreibthread soll eine höhere Priorität als der Lesethread haben.
-Die Langsame Hardware soll mithilfe der sleep() Funktion simuliert werden.
+* Der zu benutzende Speicher soll dynamisch mit kmalloc() reserviert werden. 
+* Das schreiben und Lesen des Puffers soll nun ausschließlich über Kernel-Threads realisiert werden.
+* Kritische Bereiche sollen, wenn möglich, vermieden werden.
+* Es darf keine Race-Conditions geben.
+* Der Schreibthread soll eine höhere Priorität als der Lesethread haben.
+* Die Langsame Hardware soll mithilfe eines "random sleep" in den jeweiligen Threads simuliert werden.
 
 ##2.  Lösung
 
 ###2.1 Puffer
 
-Der Puffer wird mithilfe eines Listen Structs implementiert.
-Er enthält neben dem Pointer auf den nächsten Eintrag, auch einen Pointer auf den allokierten Speicherbereich.
+Der Puffer wird mithilfe eines Listen-Structs implementiert.
+Das struct enthält einen Pointer auf das nächste Listenelement und einen Pointer auf den allokierten Speicherbereich.
+Dieser wird dann per memcopy() "befüllt".
 
-struct liste 
-{ 
-  liste *next;
-  void *value;
-};
+    struct liste 
+    { 
+      liste *next;
+      void *value;
+    };
 
 ###2.2 Funktionen
-Bei jedem Lesenden oder Schreibenden Zugriff wird ein neuer Thread erstellt. Das erfordert das Erstellen von zwei neuen Funktionen, welche dann von den Schreib- und Lesethreads ausgeführt werden. 
+Bei jedem Lesenden oder Schreibenden Zugriff wird ein neuer Thread erstellt. Das erfordert das implementieren von zwei neuen Funktionen, welche dann von den Schreib- und Lesethreads ausgeführt werden. 
 
-####2.2.1 list_add(void* pContent)
-Fügt der Liste am Ende den Pointer zum neuen dynamischen Speicherbereich hinzu und allokiert Speicherbereich für das nächste Listenelement. 
+####2.2.1 list_add(char *pContent)
+Diese Funktion reserviert dynamisch genug Speicher für den Inhalt des übergebenen Pointers und kopiert diesen dann in den Speicherbereich. Hierfür wird zuerst kmalloc() mit dem GFP_ATOMIC Flag benutzt.
+Zum kopieren der Daten in den neu allokierten Bereich wird anschließend memcpy() aufgerufen.
+
 Diese Funktion wird von den Schreibenden Threads aufgerufen.
 
 ####2.2.2 liste_remove()
