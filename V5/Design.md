@@ -3,29 +3,32 @@
  1. Vorgaben
 2. Lösung
  1. Puffer
-  1. Einleitung
-  2. Funktionen
-   1. liste_add()
-   2. liste_remove()
-   3. liste_clear()
-   4. buf_read()
-   5. buf_write()
-   6. readthread()
-   7. writethread()
-3. Weitere Probleme/Themen
+ 2. Funktionen
+  1. liste_add()
+  2. liste_remove()
+  3. liste_clear()
+  4. buf_read()
+  5. buf_write()
+  6. readthread()
+  7. writethread()
+ 3. Parametrisieren
+  1. Parametrisieren beim Laden des Moduls
+  2. Parametrisieren zur Laufzeit
+ 4. Kontroll- und Datenfluss
+ 5. Kritische Bereiche
+  1. Mögliche Race-Conditions
+3. Probleme
 4. Kritik
-5. Milestones
 
-
+--------------------------------------------------------
 
 ##1. Aufgabenstellung
-
 Wie bereits in einer früheren Aufgabe, ist das Ziel die Programmierung eines Treibers. Dieser soll einen eigenen Puffer besitzen, auf den lesend und schreibend zugegriffen werden kann. Anders als bisher wird der Speicher für den Puffer nun aber dynamisch reserviert. Der Zugriff darauf soll nun außerdem asynchron über Threads geschehen.
 
 Das Ziel des ganzen ist es, einen Zugriff auf eine externe Hardware zu simulieren.
 
 ###1.1 Vorgaben
-* Der zu benutzende Speicher soll dynamisch mit kmalloc() reserviert werden. 
+* Der zu benutzende Speicher soll dynamisch mit *kmalloc()* reserviert werden. 
 * Das schreiben und Lesen des Puffers soll nun ausschließlich über Kernel-Threads realisiert werden.
 * Kritische Bereiche sollen, wenn möglich, vermieden werden.
 * Es darf keine Race-Conditions geben.
@@ -35,10 +38,9 @@ Das Ziel des ganzen ist es, einen Zugriff auf eine externe Hardware zu simuliere
 ##2.  Lösung
 
 ###2.1 Puffer
-
-Der Puffer wird mithilfe eines Listen-Structs implementiert.
+Der Puffer wird mithilfe eines Listen-Structs implementiert, der wie ein Stack benutzt wird (LIFO)
 Das struct enthält einen Pointer auf das nächste Listenelement und einen Pointer auf den allokierten Speicherbereich.
-Dieser wird dann per memcopy() "befüllt".
+Dieser wird dann per *memcopy()* "befüllt".
 
     struct liste 
     { 
@@ -50,8 +52,8 @@ Dieser wird dann per memcopy() "befüllt".
 Bei jedem Lesenden oder Schreibenden Zugriff wird ein neuer Thread erstellt. Das erfordert das implementieren von zwei neuen Funktionen, welche dann von den Schreib- und Lesethreads ausgeführt werden. 
 
 ####2.2.1 list_add(char *pContent)
-Diese Funktion reserviert dynamisch genug Speicher für den Inhalt des übergebenen Pointers und kopiert diesen dann in den Speicherbereich. Hierfür wird zuerst kmalloc() mit dem GFP_ATOMIC Flag benutzt.
-Zum kopieren der Daten in den neu allokierten Bereich wird anschließend memcpy() aufgerufen.
+Diese Funktion reserviert dynamisch genug Speicher für den Inhalt des übergebenen Pointers und kopiert diesen dann in den Speicherbereich. Hierfür wird zuerst *kmalloc()* mit dem *GFP_ATOMIC* Flag benutzt.
+Zum kopieren der Daten in den neu allokierten Bereich wird anschließend *memcpy()* aufgerufen.
 Diese Funktion wird von den Schreibenden Threads aufgerufen.
 
 ####2.2.2 liste_remove()
@@ -63,26 +65,32 @@ Diese Funktion wird von den Lesenden Threads aufgerufen.
 Befreit den kompletten vorher reservierten Speicherbereich der gesammten Liste und aller beinhalteten Elementen.
 Diese Funktion wird beim entladen des Treibers aufgerufen.
 
-####2.2.4 buf_read()
+####2.2.4 buf_read(struct file *instance , char __user *buf, size_t len, loff_t off)
 Diese Funktion wird aufgerufen, wenn lesend auf den Treiber zugegriffen wird. z.B. mit "cat /dev/buf"
 Es wird bei jedem Aufruf ein neuer Lesethread erstellt. 
-Der Thread wird erst mit kthread_create() erstellt und dann mit wake_up_process gestartet. 
+Der Thread wird erst mit *kthread_create()* erstellt und dann mit *wake_up_process()* gestartet. 
 
     thread_id = kthread_create(readthread, NULL, "readthread");
     
 
+####2.2.5 buf_write(struct file *instance , const char _user *buf, size_t len, loff_t off)
+Diese Funktion wird aufgerufen, wenn schreibend auf den Treiber zugegriffen wird. 
 
+    echo "irgend ein Text" > /dev/buf"
+    
+Es wird bei jedem Aufruf ein neuer Schreibthread erstellt. 
+Der Thread wird erst mit *kthread_create()* erstellt und dann mit *wake_up_process()* gestartet. 
 
-####2.2.5 buf_write()
-Diese Funktion wird aufgerufen, wenn schreibend auf den Treiber zugegriffen wird. z.B. mit "echo "irgend ein Text" > /dev/buf"
-Es wird ein neuer Schreibthread erstellt. Dieser bekommt die writethread Funktion, sowie die zu speichernden Daten übergeben.
-Dann wird der neue Thread gestartet.
+    thread_id = kthread_create(writethread, (void *) buf, "writethread");
+    
 
 ####2.2.6 readthread()
-Der Thread der auf den Puffer lesend zugreift.
+Diese von einem Kernelthread ausgeführte Funktion greift lesend auf den Puffer zu.
+Hierzu ruft sie  *liste_remove()* auf. 
 
 ####2.2.7 writethread()
-Der Schreibende Thread.
+Diese von einem Kernelthread ausgeführte Funktion greift schreibend auf den Puffer zu.
+Hierzu ruft sie  *liste_add()* auf.
 
 ###2.3 Parametrisieren 
 Der Puffer soll zudem Parametrisierbar sein.
@@ -95,35 +103,33 @@ Vor jedem schreiben in den dynamischen Puffer muss dabei aber überprüft werden
 ####2.3.2 Parametrisieren zur Laufzeit
 Man könnte die Größe des noch verfügbaren Arbeitsspeichers vor jedem allokieren von Speicher abfragen und dann entscheiden ob der Puffer weiterhin erweitert werden darf.
 
-####2.4 Datenfluss
+####2.4 Kontroll- und Datenfluss
 
-    Schreiben:
-    echo "abc" > /dev/buf  ---->  buf_write() ----> create and start writethread() ----> liste_add() -----
-                                   ^                                                                     |
-                                   '----------------------------------------------------------------------          
+![Alt Read](/Treiber/img/read.png)
+![Alt Write](/Treiber/img/write.png)
 
-    Lesen:
-    cat /dev/buf           ---->  buf_read() ----> create and start readthread() ----> liste_remove() ---- 
-                                   ^                                                                     |
-                                   '----------------------------------------------------------------------          
+###2.5 Kritische Bereiche
+Die Kritischen Bereiche des Puffers werden in *readthread()* und *writethread()* mit einem Mutex geschützt. Das ist für unsere Implementierung völlig ausreichend.
+Im kritischen Bereich befindet sich  der Zugriff auf die Puffer-Allokation der Liste. 
+* Write: Beim Speicher reservieren und kopieren in den Puffer, also um die *liste_add()* Funktion
+* Read: Beim lesen aus dem Puffer, also um die *liste_remove* Funktion
 
-####2.5 Kontrollfluss
+Zu weiteren Konflikten kann es zwischen Read- und Write-Instanzen kommen.
+
+####2.5.1 Mögliche Race-Conditions
+* Der SchreibeThread im foldenen WT genannt, will gerade schreiben, wird dann schlafen gelegt und ein Lesethread (RT) liest und entfernt somit den Eintrag im Puffer.
+* RT war schlafen, wurde geweckt und will gerade lesen,  aber der Puffer wurde schon von einem anderen RT "geleert" 
+...
+
+Die Race-Conditions werden mit hilfe der Kernel Makros *wait_event_interruptible()* und *wake_up_interruptible()* verhindert.
 
 
-###2.3 Kritische Bereiche
-Die Kritischen Bereiche des Puffers werden in "readthread()" und "writethread()" mit einem Mutex geschützt. Im kritischen Bereich befinden sich nur der Zugriff auf die Puffer allokation der Liste. 
-
-
-
-
-##3. Weitere Probleme/Themen
-Ein return "0" in der buf_write Funktion führte zum endlosen wiederholten aufrufen von Write, bis der Threadvorrat erschöpft war.
-
-Beim wiederholten schreiben in den Puffer kam es zu einem Problem, der den Treiber crashen ließ. Durch Zufall funktionierte ab und zu der Zugriff auf einen nicht von uns reservierten Speicherbereich. Der Fehler viel deswegen nicht so schnell auf.
-
-Es ist von der Aufgabenstellung nicht ganz klar wie der Puffer den genau auszusehen hat. Da das aber nicht ausschlaggebend ist, beschlossen wir eine Liste zu benutzen. 
+##3. Probleme
+Auf dem Weg zur letztendlichen Implementierung trafen wir auf einige Probleme: 
+* Ein return "0" in der *buf_write()* Funktion führte zum endlosen wiederholten aufrufen von Write, bis der Threadvorrat erschöpft war.
+* Beim wiederholten schreiben in den Puffer kam es zu einem Problem, der den Treiber crashen ließ. Durch Zufall funktionierte ab und zu der Zugriff auf einen nicht von uns reservierten Speicherbereich. Der Fehler viel deswegen nicht so schnell auf.
+* Es ist von der Aufgabenstellung nicht ganz klar wie der Puffer den genau auszusehen hat. Da das aber nicht ausschlaggebend ist, implementierten wir eine einfache Liste.
 
 ##4. Kritik
-Da das Thema recht aufwendig ist und somit viel Zeit kostet, wäre es sinnvoll gewesen früher anzufangen. 
+Da das Thema recht zeitaufwendig ist, wäre es sinnvoll gewesen früher anzufangen. 
 
-##5. Milestones
