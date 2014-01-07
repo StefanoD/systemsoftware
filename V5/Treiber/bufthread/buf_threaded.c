@@ -86,17 +86,18 @@ static liste *liste_remove(void)
 static void liste_clear(void)
 {
 	liste *lptr;
-	if(root == NULL)
+	printk(KERN_INFO "ListClear started...\n");
+	if(root == NULL || root->next == NULL)
 	{
 		return;
 	}
-	while( root->next != NULL)
+
+	for( lptr = root; lptr->next!= NULL; lptr=lptr->next )
 	{
-		for( lptr = root; lptr->next->next != NULL; lptr=lptr->next );
-		kfree(lptr->next);
-		lptr->next = NULL;
+		kfree(lptr);
 	}
 	kfree(root);
+	printk(KERN_INFO "ListClear finished!\n");
 }
 
 static int readthread( void * data)
@@ -207,7 +208,6 @@ static ssize_t buf_read(struct file *instance, char __user *buf, size_t len, lof
 	}
 	wake_up_process(thread_id_read); /*starts thread*/
 
-	wait_for_completion(&on_exit);
 	return 0;
 }
 
@@ -229,7 +229,6 @@ static ssize_t buf_write(struct file *instance, const char __user *buf, size_t l
 		return -EIO;
 	}
 	wake_up_process(thread_id_write); /*starts thread*/
-	wait_for_completion(&on_exit);
 	return len;
 }
 
@@ -286,11 +285,19 @@ int __init buf_init(void)
 }
 
 void __exit buf_exit(void)
-{
+{	
+	printk(KERN_INFO "Kill write thread\n");
+	if(thread_id_write > 0)
+	{
 	kill_pid(task_pid(thread_id_write), SIGTERM, 1);
 	wait_for_completion(&on_exit);
+	}
+	printk(KERN_INFO "Kill read thread\n");
+	if(thread_id_read > 0)
+	{
 	kill_pid(task_pid(thread_id_read), SIGTERM, 1);
 	wait_for_completion(&on_exit);
+	}
 	liste_clear();
 	printk(KERN_INFO "%s: exit()\n", DEV_DRIVER);
 	device_destroy(cl, DEV_NUMBER);
