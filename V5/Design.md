@@ -1,3 +1,5 @@
+# Todo alles ändern da nun mit komplett neuer implementierung YAY!
+
 ##Inhalt
 1. Aufgabenstellung
  1. Vorgaben
@@ -33,14 +35,19 @@ Das Ziel des ganzen ist es, einen Zugriff auf eine externe Hardware zu simuliere
 * Kritische Bereiche sollen, wenn möglich, vermieden werden.
 * Es darf keine Race-Conditions geben.
 * Der Schreibthread soll eine höhere Priorität als der Lesethread haben.
-* Die Langsame Hardware soll mithilfe eines "random sleep" in den jeweiligen Threads simuliert werden.
+* Die Langsame Hardware kann mithilfe eines "random sleep" in den jeweiligen Threads simuliert werden.
 
 ##2.  Lösung
+Nach einigen Rückschlägen bei der Implementierung wurde entschieden, neu anzufangen.
 
 ###2.1 Puffer
-Der Puffer wird mithilfe eines Listen-Structs implementiert, der wie ein Stack benutzt wird (LIFO)
-Das struct enthält einen Pointer auf das nächste Listenelement und einen Pointer auf den allokierten Speicherbereich.
-Dieser wird dann per *memcopy()* "befüllt".
+In der neuen Implementation benutzen wir ein Array, welches mit char Pointern gefüllt wird.
+Dies hat den Vorteil, dass einzelne Einträge direkt angesprochen werden können und dass dieses Array von der Größe beschränkbar ist. Dadurch das die Einträge aus Pointern bestehen, wird nicht mehr Speicherplatz reserviert als benötigt! Erst wenn der Speicher wirklich benötigt wird versucht der *writethread()* diesen zu reservieren.
+Der einfachhalthaber benutzen wir auch dieses Array wie einen LIFO-Stack.
+
+Der alte Puffer wurde mithilfe eines Listen-Structs implementiert, das auch wie ein Stack benutzt wurde (LIFO)
+Das struct enthielt einen Pointer auf das nächste Listenelement und einen Pointer auf den allokierten Speicherbereich.
+Dieser wurde dann per *memcopy()* "befüllt". 
 
     struct liste 
     { 
@@ -48,32 +55,24 @@ Dieser wird dann per *memcopy()* "befüllt".
       void *value;
     };
 
+Die alte Implementation war viel komplexer und vom Code nicht ausgereift genug. Es gab auch keinerelei Einschränkungen der Datenmengen. 
+
+
+#TODO hier WEiter
+
 ###2.2 Funktionen
-Bei jedem Lesenden oder Schreibenden Zugriff wird ein neuer Thread erstellt. Das erfordert das implementieren von zwei neuen Funktionen, welche dann von den Schreib- und Lesethreads ausgeführt werden. 
+Bei jedem Lesenden oder Schreibenden Zugriff wird nach wie vor ein neuer Thread erstellt. Das erfordert das implementieren von zwei neuen Funktionen, welche dann von den Schreib- und Lesethreads ausgeführt werden. 
 
-####2.2.1 list_add(char *pContent)
-Diese Funktion reserviert dynamisch genug Speicher für den Inhalt des übergebenen Pointers und kopiert diesen dann in den Speicherbereich. Hierfür wird zuerst *kmalloc()* mit dem *GFP_ATOMIC* Flag benutzt.
-Zum kopieren der Daten in den neu allokierten Bereich wird anschließend *memcpy()* aufgerufen.
-Diese Funktion wird von den Schreibenden Threads aufgerufen.
-
-####2.2.2 liste_remove()
-Entfernt den Letzten Eintrag aus der Liste und gibt diesen dann an den aufrufenden Thread zurück.
-Beim Entfernen wird außerdem der zugewiesene Speicher befreit.
-Diese Funktion wird von den Lesenden Threads aufgerufen.
-
-####2.2.3 liste_clear()
-Befreit den kompletten vorher reservierten Speicherbereich der gesammten Liste und aller beinhalteten Elementen.
-Diese Funktion wird beim entladen des Treibers aufgerufen.
-
-####2.2.4 buf_read(struct file *instance , char __user *buf, size_t len, loff_t off)
+####2.2.1 buf_read(struct file *instance , char __user *buf, size_t len, loff_t off)
 Diese Funktion wird aufgerufen, wenn lesend auf den Treiber zugegriffen wird. z.B. mit "cat /dev/buf"
 Es wird bei jedem Aufruf ein neuer Lesethread erstellt. 
+
 Der Thread wird erst mit *kthread_create()* erstellt und dann mit *wake_up_process()* gestartet. 
 
     thread_id = kthread_create(readthread, NULL, "readthread");
     
 
-####2.2.5 buf_write(struct file *instance , const char _user *buf, size_t len, loff_t off)
+####2.2.2 buf_write(struct file *instance , const char _user *buf, size_t len, loff_t off)
 Diese Funktion wird aufgerufen, wenn schreibend auf den Treiber zugegriffen wird. 
 
     echo "irgend ein Text" > /dev/buf"
@@ -84,11 +83,11 @@ Der Thread wird erst mit *kthread_create()* erstellt und dann mit *wake_up_proce
     thread_id = kthread_create(writethread, (void *) buf, "writethread");
     
 
-####2.2.6 readthread()
+####2.2.3 readthread()
 Diese von einem Kernelthread ausgeführte Funktion greift lesend auf den Puffer zu.
 Hierzu ruft sie  *liste_remove()* auf. 
 
-####2.2.7 writethread()
+####2.2.4 writethread()
 Diese von einem Kernelthread ausgeführte Funktion greift schreibend auf den Puffer zu.
 Hierzu ruft sie  *liste_add()* auf.
 
@@ -133,3 +132,20 @@ Auf dem Weg zur letztendlichen Implementierung trafen wir auf einige Probleme:
 ##4. Kritik
 Da das Thema recht zeitaufwendig ist, wäre es sinnvoll gewesen früher anzufangen. 
 
+
+
+
+###Alte Funktionen
+####2.2.1 list_add(char *pContent)
+Diese Funktion reserviert dynamisch genug Speicher für den Inhalt des übergebenen Pointers und kopiert diesen dann in den Speicherbereich. Hierfür wird zuerst *kmalloc()* mit dem *GFP_ATOMIC* Flag benutzt.
+Zum kopieren der Daten in den neu allokierten Bereich wird anschließend *memcpy()* aufgerufen.
+Diese Funktion wird von den Schreibenden Threads aufgerufen.
+
+####2.2.2 liste_remove()
+Entfernt den Letzten Eintrag aus der Liste und gibt diesen dann an den aufrufenden Thread zurück.
+Beim Entfernen wird außerdem der zugewiesene Speicher befreit.
+Diese Funktion wird von den Lesenden Threads aufgerufen.
+
+####2.2.3 liste_clear()
+Befreit den kompletten vorher reservierten Speicherbereich der gesammten Liste und aller beinhalteten Elementen.
+Diese Funktion wird beim entladen des Treibers aufgerufen.
