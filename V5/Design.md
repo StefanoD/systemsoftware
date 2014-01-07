@@ -52,20 +52,26 @@ Bei jedem Lesenden oder Schreibenden Zugriff wird ein neuer Thread erstellt. Das
 ####2.2.1 list_add(char *pContent)
 Diese Funktion reserviert dynamisch genug Speicher für den Inhalt des übergebenen Pointers und kopiert diesen dann in den Speicherbereich. Hierfür wird zuerst kmalloc() mit dem GFP_ATOMIC Flag benutzt.
 Zum kopieren der Daten in den neu allokierten Bereich wird anschließend memcpy() aufgerufen.
-
 Diese Funktion wird von den Schreibenden Threads aufgerufen.
 
 ####2.2.2 liste_remove()
-Entfernt den Letzten Eintrag der Liste und gibt ihn zurück. 
+Entfernt den Letzten Eintrag aus der Liste und gibt diesen dann an den aufrufenden Thread zurück.
+Beim Entfernen wird außerdem der zugewiesene Speicher befreit.
 Diese Funktion wird von den Lesenden Threads aufgerufen.
 
 ####2.2.3 liste_clear()
-Befreit den Speicherbereich von sämtlichen noch in der Liste vorhandenen Elementen und der Liste selbst und löscht so die Komplette Liste. 
+Befreit den kompletten vorher reservierten Speicherbereich der gesammten Liste und aller beinhalteten Elementen.
+Diese Funktion wird beim entladen des Treibers aufgerufen.
 
 ####2.2.4 buf_read()
 Diese Funktion wird aufgerufen, wenn lesend auf den Treiber zugegriffen wird. z.B. mit "cat /dev/buf"
-Es wird ein neuer Lesethread erstellt. Dieser liest den neuesten Eintrag der Liste, sowie die zu speichernden Daten übergeben.
-Dann wird der neue Thread gestartet.
+Es wird bei jedem Aufruf ein neuer Lesethread erstellt. 
+Der Thread wird erst mit kthread_create() erstellt und dann mit wake_up_process gestartet. 
+
+    thread_id = kthread_create(readthread, NULL, "readthread");
+    
+
+
 
 ####2.2.5 buf_write()
 Diese Funktion wird aufgerufen, wenn schreibend auf den Treiber zugegriffen wird. z.B. mit "echo "irgend ein Text" > /dev/buf"
