@@ -27,8 +27,8 @@ static dev_t DEV_NUMBER; // var for first device number
 static struct cdev c_dev; //global chardevice struct
 static struct class *cl;	//global device class
 
-wait_queue_head_t write_queue;
-wait_queue_head_t read_queue;
+static wait_queue_head_t write_queue;
+static wait_queue_head_t read_queue;
 
 DEFINE_MUTEX( mutex );
 DECLARE_COMPLETION( on_exit );
@@ -74,7 +74,7 @@ static ssize_t buf_read(struct file *instance, char __user *buf, size_t len, lof
 	printk(KERN_DEBUG "%s: (read after completion) %d\n", DEV_DRIVER, count);
 	to_copy = min(len, sizeof(Buffer[count])); 
 	not_copied = copy_to_user(buf, Buffer[count], to_copy);
-	printk(KERN_INFO "%s: Aus dem Buffer gelesen: %s", DEV_DRIVER, Buffer[count]);
+	printk(KERN_INFO "%s: Aus dem Buffer gelesen: %s\n", DEV_DRIVER, Buffer[count]);
 	
 	printk(KERN_DEBUG "%s: (create ReadThread)\n", DEV_DRIVER);
 	
@@ -142,7 +142,7 @@ static ssize_t buf_write(struct file *instance, const char __user *buf, size_t l
 	strlcpy(Buffer[iptr->count], buf, len);
 
 	wake_up_interruptible(&read_queue);
-	printk(KERN_INFO "%s: In den Buffer geschrieben: %s Pos:%d", DEV_DRIVER, Buffer[iptr->count], iptr->count);
+	printk(KERN_INFO "%s: In den Buffer geschrieben: %s Pos:%d\n", DEV_DRIVER, Buffer[iptr->count], iptr->count);
 	return len;
 }
 
