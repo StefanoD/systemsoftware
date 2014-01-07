@@ -22,48 +22,188 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Florian Froehlich");
 MODULE_DESCRIPTION("a simple buffer driver");
 
-#define DEV_NAME "buf"
-#define DEV_CLASS "buf_class"
-#define DEV_DRIVER "buf_driver"
-
+//driver variables
 static dev_t DEV_NUMBER; // var for first device number
 static struct cdev c_dev; //global chardevice struct
 static struct class *cl;	//global device class
 
-
-#define READ_POSSIBLE (atomic_read(&count) > 0)
-#define WRITE_POSSIBLE (atomic_read(&count) < 100)
-
+//static variables
 static atomic_t count = ATOMIC_INIT(0); //Listenelemente
 static wait_queue_head_t write_queue;
 static wait_queue_head_t read_queue;
 static DECLARE_COMPLETION( on_exit );
 static struct rt_mutex mut;
-struct task_struct *thread_id_write, *thread_id_read;
 
 typedef struct _liste {
 	struct _liste *next;
 	char *element;
 } liste;
 
+//global variables for instance
 static liste *root = NULL;
+size_t buf_len;
+char *tmp_write;
+char *result;
+struct task_struct *thread_id_write, *thread_id_read;
+
+#define DEV_NAME "buf"
+#define DEV_CLASS "buf_class"
+#define DEV_DRIVER "buf_driver"
+#define READ_POSSIBLE (atomic_read(&count) > 0)
+#define WRITE_POSSIBLE (atomic_read(&count) < 100)
+
+//functions
+static void liste_add(char *new_element);
+static liste *liste_remove(void);
+static void liste_clear(void);
+static int readthread( void * data);
+static int writethread(  void * length);
+static ssize_t buf_read(struct file *instance, char __user *buf, size_t len, loff_t *off);
+static ssize_t buf_write(struct file *instance, const char __user *buf, size_t len, loff_t *off);
+static int buf_open(struct inode *i, struct file *instance);
+static int buf_close(struct inode *i, struct file *instance);
+
+
+
+
+static ssize_t buf_write(struct file *instance, const char __user *buf, size_t len, loff_t *off)
+{
+	int not_copied=0;
+	if(!WRITE_POSSIBLE && instance->f_flags&O_NONBLOCK)
+	{
+		printk(KERN_DEBUG "%s: O_NONBLOCK -> EAGAIN\n", DEV_DRIVER);
+		return -EAGAIN;
+	}
+
+	thread_id_write = kthread_create(writethread, NULL, "writethread");
+	if( thread_id_write == 0)
+	{
+		return -EIO;
+	}
+	wake_up_process(thread_id_write); /*starts thread*/
+	wait_for_completion(&on_exit);
+
+	//buffer is allocated now write from userspace!
+	strncpy(tmp_write, buf, len);
+	return len - not_copied;
+}
+
+static ssize_t buf_read(struct file *instance, char __user *buf, size_t len, loff_t *off)
+{	
+	int not_copied;
+	printk(KERN_INFO "%s: read()\n", DEV_DRIVER);
+
+	if(!READ_POSSIBLE && instance->f_flags&O_NONBLOCK)
+	{
+		printk(KERN_DEBUG "%s(read): some error occured -> EAGAIN\n", DEV_DRIVER);
+		return -EAGAIN;
+	} 
+		
+	thread_id_read = kthread_create(readthread, NULL, "readthread");
+	if( thread_id_read == 0)
+		return -EIO;
+
+	wake_up_process(thread_id_read); /*starts thread*/
+	wait_for_completion(&on_exit);
+
+	not_copied = copy_to_user(buf, &result, buf_len);
+	kfree(&result);
+	return (size_t)(buf_len - not_copied);
+}
+
+static int readthread( void * data)
+{
+	liste *t_buffer = NULL;
+	struct sched_param schedpar;
+	allow_signal(SIGTERM);
+
+	schedpar.sched_priority = 50;
+	sched_setscheduler(current, SCHED_FIFO, &schedpar);
+	printk(KERN_INFO "ReadThread %d start with Priority: %d\n", current->pid, current->rt_priority);
+	if(wait_event_interruptible(read_queue, READ_POSSIBLE) )
+	{
+		printk(KERN_DEBUG "readthread: some error occured -> ERESTART\n");
+		return -ERESTARTSYS;
+	}
+
+	if( rt_mutex_lock_interruptible(&mut,0) <0)
+	{
+		printk(KERN_INFO "INTERRUPT while rt_mutex_lock_interruptible\n");
+	} 
+	else 
+	{
+		printk(KERN_INFO "ReadThread %d in critical section\n", current->pid);
+		t_buffer = liste_remove();
+		if(t_buffer == NULL)
+			return 0;
+		result = t_buffer->element;
+		printk(KERN_INFO "ReadThread %d read %s\n", current->pid, t_buffer->element);
+	}
+	printk(KERN_INFO "ReadThread %d leaving critical section\n", current->pid);
+
+	if(t_buffer != NULL) 
+	{
+
+	 	//kfree(t_buffer->element);
+		//kfree(t_buffer);
+		printk(KERN_INFO "ReadThread freed Buffer!\n");
+
+	}
+	rt_mutex_unlock(&mut);
+
+	printk(KERN_INFO "ReadThread %d finished\n",current->pid);
+	complete_and_exit(&on_exit,0);
+	wake_up_interruptible(&write_queue);
+}
+
+static int writethread(void *data)
+{
+	struct sched_param schedpar;
+	allow_signal(SIGTERM);
+	
+	schedpar.sched_priority = 70;
+	sched_setscheduler(current, SCHED_FIFO, &schedpar);
+	printk(KERN_INFO "WriteThread %d start with Priority:%d\n", current->pid, current->rt_priority);
+	if(wait_event_interruptible(write_queue, WRITE_POSSIBLE)) 
+	{
+		printk(KERN_DEBUG "writethread: wait_event interrupted -> ERESTART\n");
+		return -ERESTARTSYS;
+	}
+	// -- critical section --
+	if( rt_mutex_lock_interruptible(&mut,0) < 0)
+	{
+		printk(KERN_INFO "INTERRUPT while rt_mutex_lock_interruptible\n");
+	} else {
+		printk(KERN_INFO "WriteThread %d in critical section\n", current->pid);
+		//allokieren
+		tmp_write = kmalloc(buf_len * (sizeof(char)), GFP_ATOMIC);
+		liste_add(tmp_write);
+		printk(KERN_INFO "WriteThread %d allocated: %d", current->pid, (buf_len * (sizeof(char))));
+	}
+	rt_mutex_unlock(&mut);
+	// ----------------------
+	printk(KERN_INFO "WriteThread %d finished\n",current->pid);
+
+	complete_and_exit(&on_exit,0);
+	wake_up_interruptible(&read_queue);
+
+
+}
 
 static void liste_add(char *new_element)
 {
 	liste *lptr;
 	
 	if(root == NULL)
-	{
 		return;
-	}
-	printk(KERN_INFO "WriteThread %d ListeAdd Starting Index:%d\n", current->pid, atomic_read(&count));
+
+	//printk(KERN_INFO "WriteThread %d ListeAdd Starting Index:%d\n", current->pid, atomic_read(&count));
 	for( lptr = root; lptr->next != NULL; lptr=lptr->next );
 	lptr->next = (liste*) kmalloc(sizeof(liste), GFP_ATOMIC);
 	lptr->next->next = NULL;
-	lptr->next->element = (void *) kmalloc(sizeof(new_element), GFP_ATOMIC);
-	memcpy(lptr->next->element, new_element, strlen(new_element));
+	lptr->next->element = new_element;
 	atomic_inc(&count);
-	printk(KERN_INFO "WriteThread %d ListeAdd FinishedIndex:%d\n", current->pid, atomic_read(&count));
+	//printk(KERN_INFO "WriteThread %d ListeAdd FinishedIndex:%d\n", current->pid, atomic_read(&count));
 }
 
 static liste *liste_remove(void)
@@ -71,9 +211,7 @@ static liste *liste_remove(void)
 	liste *lptr, *tail;
 	
 	if(root == NULL || root->next == NULL)
-	{
 		return NULL;
-	}
 	printk(KERN_INFO "ReadThread %d ListeRemove Starting Index:%d\n", current->pid, atomic_read(&count));
 	for( lptr = root; lptr->next->next != NULL; lptr=lptr->next );
 	tail = lptr->next;
@@ -88,95 +226,15 @@ static void liste_clear(void)
 	liste *lptr;
 	printk(KERN_INFO "ListClear started...\n");
 	if(root == NULL || root->next == NULL)
-	{
 		return;
-	}
 
 	for( lptr = root; lptr->next!= NULL; lptr=lptr->next )
-	{
 		kfree(lptr);
-	}
 	kfree(root);
 	printk(KERN_INFO "ListClear finished!\n");
 }
 
-static int readthread( void * data)
-{
-	liste *t_buffer = NULL;
-	unsigned int i, sleeptime;
-	struct sched_param schedpar;
-	allow_signal(SIGTERM);
 
-	schedpar.sched_priority = 50;
-	sched_setscheduler(current, SCHED_FIFO, &schedpar);
-	printk(KERN_INFO "ReadThread %d start with Priority: %d\n", current->pid, current->rt_priority);
-	if(wait_event_interruptible(read_queue, READ_POSSIBLE) )
-	{
-		printk(KERN_DEBUG "%s: some error occured -> ERESTART\n", DEV_DRIVER);
-		return -ERESTART;
-	}
-
-	if( rt_mutex_lock_interruptible(&mut,0) <0)
-	{
-		printk(KERN_INFO "INTERRUPT while rt_mutex_lock_interruptible\n");
-	} else {
-		printk(KERN_INFO "ReadThread %d in critical section\n", current->pid);
-		t_buffer = liste_remove();
-	
-		printk(KERN_INFO "ReadThread %d read %s\n", current->pid, t_buffer->element);
-	}
-	printk(KERN_INFO "ReadThread %d leaving critical section\n", current->pid);
-
-	if(t_buffer != NULL) 
-	{
-	 	kfree(t_buffer->element);
-		kfree(t_buffer);
-	}
-	get_random_bytes(&i, sizeof(i));
-	sleeptime = i % 5;
-	printk(KERN_INFO "ReadThread Sleeptime %d", sleeptime);
-	ssleep(sleeptime);
-	rt_mutex_unlock(&mut);
-	printk(KERN_INFO "WriteThread %d finished\n",current->pid);
-	complete_and_exit(&on_exit,0);
-	wake_up_interruptible(&write_queue);
-	
-}
-
-static int writethread( void *data)
-{
-	struct sched_param schedpar;
-	unsigned int i, sleeptime;
-	allow_signal(SIGTERM);
-
-	schedpar.sched_priority = 70;
-	sched_setscheduler(current, SCHED_FIFO, &schedpar);
-	printk(KERN_INFO "WriteThread %d start with Priority:%d\n", current->pid, current->rt_priority);
-	if(wait_event_interruptible(write_queue, WRITE_POSSIBLE)) 
-	{
-		printk(KERN_DEBUG "%s: wait_event interrupted -> ERESTART\n", DEV_DRIVER);
-		return -ERESTART;
-	}
-	if( rt_mutex_lock_interruptible(&mut,0) <0)
-	{
-		printk(KERN_INFO "INTERRUPT while rt_mutex_lock_interruptible\n");
-	} else {
-		printk(KERN_INFO "WriteThread %d in critical section\n", current->pid);
-		liste_add((char *) data);
-		printk(KERN_INFO "WriteThread %d wrote %s\n", current->pid, (char*)data);
-	}
-	printk(KERN_INFO "WriteThread %d leaving critical section\n", current->pid);
-	get_random_bytes(&i, sizeof(i));
-	sleeptime = i % 5;
-	printk(KERN_INFO "WriteThread Sleeptime %d\n", sleeptime);
-	ssleep(sleeptime);
-	rt_mutex_unlock(&mut);
-	printk(KERN_INFO "WriteThread %d finished\n",current->pid);
-	complete_and_exit(&on_exit,0);
-	wake_up_interruptible(&read_queue);
-
-
-}
 static int buf_open(struct inode *i, struct file *instance)
 {
 	printk(KERN_INFO "%s: open()\n", DEV_DRIVER);
@@ -189,49 +247,6 @@ static int buf_close(struct inode *i, struct file *instance)
 	printk(KERN_INFO "%s: close()\n", DEV_DRIVER);
 	return 0;
 }
-
-
-static ssize_t buf_read(struct file *instance, char __user *buf, size_t len, loff_t *off)
-{	
-	printk(KERN_INFO "%s: read()\n", DEV_DRIVER);
-
-	if(!READ_POSSIBLE && instance->f_flags&O_NONBLOCK)
-	{
-		printk(KERN_DEBUG "%s: some error occured -> EAGAIN\n", DEV_DRIVER);
-		return -EAGAIN;
-	} 
-		
-	thread_id_read = kthread_create(readthread, NULL, "readthread");
-	if( thread_id_read == 0)
-	{
-		return -EIO;
-	}
-	wake_up_process(thread_id_read); /*starts thread*/
-
-	return 0;
-}
-
-
-
-static ssize_t buf_write(struct file *instance, const char __user *buf, size_t len, loff_t *off)
-{
-	printk(KERN_INFO "%s: write()\n", DEV_DRIVER);
-	
-	if(!WRITE_POSSIBLE && instance->f_flags&O_NONBLOCK)
-	{
-		printk(KERN_DEBUG "%s: O_NONBLOCK -> EAGAIN\n", DEV_DRIVER);
-		return -EAGAIN;
-	}
-
-	thread_id_write = kthread_create(writethread,(void *) buf, "writethread");
-	if( thread_id_write == 0)
-	{
-		return -EIO;
-	}
-	wake_up_process(thread_id_write); /*starts thread*/
-	return len;
-}
-
 
 static struct file_operations fops =
 {
@@ -289,14 +304,14 @@ void __exit buf_exit(void)
 	printk(KERN_INFO "Kill write thread\n");
 	if(thread_id_write > 0)
 	{
-	kill_pid(task_pid(thread_id_write), SIGTERM, 1);
-	wait_for_completion(&on_exit);
+		kill_pid(task_pid(thread_id_write), SIGTERM, 1);
+		wait_for_completion(&on_exit);
 	}
 	printk(KERN_INFO "Kill read thread\n");
 	if(thread_id_read > 0)
 	{
-	kill_pid(task_pid(thread_id_read), SIGTERM, 1);
-	wait_for_completion(&on_exit);
+		kill_pid(task_pid(thread_id_read), SIGTERM, 1);
+		wait_for_completion(&on_exit);
 	}
 	liste_clear();
 	printk(KERN_INFO "%s: exit()\n", DEV_DRIVER);
@@ -309,8 +324,5 @@ void __exit buf_exit(void)
 	return;	
 }
 
-
-
 module_init(buf_init);
 module_exit(buf_exit);
-

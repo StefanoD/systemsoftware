@@ -23,6 +23,7 @@ static int my_open(struct inode *i, struct file *f)
 		printk(KERN_INFO "Driver: open()\n");
 		return 0;
 	}
+	atomic_dec(&open_count);
 	printk(KERN_INFO "Driver in use\n");
 	return -EIO;
 	

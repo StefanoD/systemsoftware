@@ -24,5 +24,5 @@ clean:
 	rm *_test
 
 install: 
-	scp *.ko *_test root@192.168.29.25:~/
+	scp *.ko *_test root@192.168.29.6:~/
 

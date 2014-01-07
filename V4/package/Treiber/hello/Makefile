@@ -17,5 +17,5 @@ clean:
 endif 
 
 install: 
-	scp *.ko root@192.168.29.25:~/
-	scp test_hello root@192.168.29.25:~/
+	scp *.ko root@192.168.29.6:~/
+	scp test_hello root@192.168.29.6:~/

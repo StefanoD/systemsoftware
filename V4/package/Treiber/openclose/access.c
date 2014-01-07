@@ -11,12 +11,12 @@ int main()
 	static char *s = "Awesome String";
 	
 	fileDeskriptor = open("/dev/mydevice", O_RDWR);
+	sleep(5);
 	if (fileDeskriptor < 0) 
 	{
 		perror("open failed\n");
 		return -1;
 	}
-	sleep(5);
 	printf("fileDeskriptor opened!\n");
 	writtenBytes = write(fileDeskriptor, s, strlen(s));
 	if (writtenBytes < 0)

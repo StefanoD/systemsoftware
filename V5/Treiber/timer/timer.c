@@ -3,17 +3,15 @@
 #include <linux/timer.h>
 #include <linux/sched.h>
 #include <linux/init.h>
-#include <asm-/msr.h> 
 
 static struct timer_list mytimer;
-unsigned long ini, end, max = 0, min = 99999999999999, last_jiff;
+unsigned long ini, end, max = 0, min = 999999999, last_jiff;
 
 static void inc_count(unsigned long arg)
 {
-	unsigned long time;
-	rdtscl(end);
-	time = end -ini;
-	ini = end;
+	unsigned long time, j;
+	j = jiffies;
+	time = j - last_jiff;
 	if(time > max)
 	{
 		max = time;
@@ -22,12 +20,11 @@ static void inc_count(unsigned long arg)
 	{
 		min = time;
 	}
-	printk(KERN_INFO "Differenz TSC: %ld\n", time);
-	printk(KERN_INFO "MAX TSC: %ld\n", max);
-	printk(KERN_INFO "MIN TSC: %ld\n", min);
-	printk(KERN_INFO "inc_count called (%ld)\n", (mytimer.expires - last_jiff));
-	last_jiff = mytimer.expires;
-	mytimer.expires = jiffies + (2*HZ);	// 2 Sekunden
+	printk(KERN_INFO "MAX TSC: %ld Jiffies\n", max);
+	printk(KERN_INFO "MIN TSC: %ld Jiffies\n", min);
+	printk(KERN_INFO "Differenz %ld Jiffies\n", time);
+	last_jiff = jiffies;
+	mytimer.expires = last_jiff + (2*HZ);	// 2 Sekunden
 	add_timer(&mytimer);
 }
 
@@ -36,9 +33,8 @@ static int __init ktimer_init(void)
 	init_timer(&mytimer);	
 	mytimer.function = inc_count; //aufzurufende Funktion
 	mytimer.data = 0;		//Daten fuer Funktion
-	mytimer.expires = jiffies + (2*HZ);		// Zeitpunkt fuer Aufruf
-	last_jiff = mytimer.expires;
-	rdtscl(ini);
+	last_jiff = jiffies;
+	mytimer.expires = last_jiff + (2*HZ);		// Zeitpunkt fuer Aufruf
 	add_timer(&mytimer);
 	return 0;
 }
