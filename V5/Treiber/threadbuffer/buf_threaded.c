@@ -64,11 +64,6 @@ static ssize_t buf_read(struct file *instance, char __user *buf, size_t len, lof
 	if(wait_event_interruptible(read_queue, READ_POSSIBLE))
 		return -ERESTARTSYS;
 
-	/*if( mutex_lock_interruptible(&mutex) == -EINTR )
-	{
-		printk(KERN_ERR "%s(read): Mutex interrupted!", DEV_DRIVER);
-		return -EINTR;
-	}*/
 	count = atomic_read(&buffer_count)-1;
 	
 	printk(KERN_DEBUG "%s: (read after completion) %d\n", DEV_DRIVER, count);
@@ -86,7 +81,6 @@ static ssize_t buf_read(struct file *instance, char __user *buf, size_t len, lof
 	printk(KERN_DEBUG "%s: (after completion)\n", DEV_DRIVER);
 	
 	atomic_dec(&buffer_count);
-	//mutex_unlock(&mutex);
 	wake_up_interruptible(&write_queue);
 
 	return not_copied;
