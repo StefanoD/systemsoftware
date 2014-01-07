@@ -56,14 +56,14 @@ static void liste_add(char *new_element)
 	{
 		return;
 	}
-	printk(KERN_INFO "Thread %d ListeAdd Starting Index:%d\n", current->pid, atomic_read(&count));
+	printk(KERN_INFO "WriteThread %d ListeAdd Starting Index:%d\n", current->pid, atomic_read(&count));
 	for( lptr = root; lptr->next != NULL; lptr=lptr->next );
 	lptr->next = (liste*) kmalloc(sizeof(liste), GFP_ATOMIC);
 	lptr->next->next = NULL;
 	lptr->next->element = (void *) kmalloc(sizeof(new_element), GFP_ATOMIC);
 	memcpy(lptr->next->element, new_element, strlen(new_element));
 	atomic_inc(&count);
-	printk(KERN_INFO "Thread %d ListeAdd FinishedIndex:%d\n", current->pid, atomic_read(&count));
+	printk(KERN_INFO "WriteThread %d ListeAdd FinishedIndex:%d\n", current->pid, atomic_read(&count));
 }
 
 static liste *liste_remove(void)
@@ -74,12 +74,12 @@ static liste *liste_remove(void)
 	{
 		return NULL;
 	}
-	printk(KERN_INFO "Thread %d ListeRemove Starting Index:%d\n", current->pid, atomic_read(&count));
+	printk(KERN_INFO "ReadThread %d ListeRemove Starting Index:%d\n", current->pid, atomic_read(&count));
 	for( lptr = root; lptr->next->next != NULL; lptr=lptr->next );
 	tail = lptr->next;
 	lptr->next = NULL;
 	atomic_dec(&count);
-	printk(KERN_INFO "Thread %d ListeRemove Finished Index:%d\n", current->pid, atomic_read(&count));
+	printk(KERN_INFO "ReadThread %d ListeRemove Finished Index:%d\n", current->pid, atomic_read(&count));
 	return tail;
 }
 
